@@ -29,6 +29,9 @@ param roleAssignments array = []
 @description('Optional. Location for all resources.')
 param location string = resourceGroup().location
 
+@description('')
+param site string = 'Default-First-Site-Name'
+
 @allowed([
   ''
   'CanNotDelete'
@@ -53,6 +56,7 @@ var activeDirectoryConnectionProperties = [
     dns: !empty(domainName) ? dnsServers : null
     smbServerName: !empty(domainName) ? smbServerNamePrefix : null
     organizationalUnit: !empty(domainJoinOU) ? domainJoinOU : null
+    site: !empty(domainName) ? site : null
   }
 ]
 
@@ -126,3 +130,5 @@ output resourceGroupName string = resourceGroup().name
 
 @description('The location the resource was deployed into.')
 output location string = netAppAccount.location
+
+output smbServerFqdn string = netAppAccount_capacityPools[0].outputs.smbServerFqdn

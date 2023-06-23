@@ -108,6 +108,9 @@ param existingVnetAvdSubnetResourceId string = ''
 @description('Optional. Existing virtual network subnet for private endpoints. (Default: "")')
 param existingVnetPrivateEndpointSubnetResourceId string = ''
 
+@description('Optional. Existing delegated virtual network subnet for Azure Netapp Files. (Default: "")')
+param existingVnetAzureNetappFilesSubnetResourceId string = ''
+
 @description('Required. Existing hub virtual network for perring.')
 param existingHubVnetResourceId string = ''
 
@@ -119,6 +122,9 @@ param vNetworkAvdSubnetAddressPrefix string = '10.10.0.0/24'
 
 @description('Optional. private endpoints virtual network subnet address prefix. (Default: 10.10.1.0/27)')
 param vNetworkPrivateEndpointSubnetAddressPrefix string = '10.10.1.0/27'
+
+@description('Optional. Azure Netapp Files designated subnet address prefix')
+param vNetworkAzureNetappFilesSubnetAddressPrefix string = '10.10.2.0/24' //can be smaller?
 
 @description('Optional. custom DNS servers IPs.')
 param customDnsIps string = ''
@@ -208,6 +214,9 @@ param fslogixStoragePerformance string = 'Premium'
 @description('Optional. Storage account SKU for MSIX storage. Recommended tier is Premium. (Defualt: Premium)')
 param msixStoragePerformance string = 'Premium'
 
+@description('Service Level for Azure Netapp Files')
+param anfServiceLevel string = 'Standard'
+
 @description('Optional. This property can be used by user in the request to enable or disable the Host Encryption for the virtual machine. This will enable the encryption for all the disks including Resource/Temp disk at host itself. For security reasons, it is recommended to set encryptionAtHost to True. Restrictions: Cannot be enabled if Azure Disk Encryption (guest-VM encryption using bitlocker/DM-Crypt) is enabled on your VMs.')
 param encryptionAtHost bool = false
 
@@ -255,6 +264,11 @@ param useSharedImage bool = false
 
 @description('Optional. Source custom image ID. (Default: "")')
 param avdImageTemplateDefinitionId string = ''
+
+//testing anf
+//will need to update storage bicep template to only allow options files/anf
+//@description('Type of storage account. Azure Files or Azure Netapp Files')
+//param storageType string = 'azureFiles'
 
 @description('Optional. OU name for Azure Storage Account. It is recommended to create a new AD Organizational Unit (OU) in AD and disable password expiration policy on computer accounts or service logon accounts accordingly.  (Default: "")')
 param storageOuPath string = ''
@@ -306,6 +320,10 @@ param avdVnetworkSubnetCustomName string = 'snet-avd-use2-app1-001'
 @maxLength(80)
 @description('Optional. private endpoints virtual network subnet custom name. (Default: snet-pe-use2-app1-001)')
 param privateEndpointVnetworkSubnetCustomName string = 'snet-pe-use2-app1-001'
+
+@maxLength(80)
+@description('Optional. Azure Netapp Files virtual network subnet custom name. (Default: snet-pe-use2-app1-001)')
+param azureNetappFilesVnetworkSubnetCustomName string = 'snet-anf-use2-app1-001'
 
 @maxLength(80)
 @description('Optional. AVD network security group custom name. (Default: nsg-avd-use2-app1-001)')
@@ -596,6 +614,7 @@ var varMonitoringRgName = avdUseCustomNaming ? avdMonitoringRgCustomName : 'rg-a
 var varVnetworkName = avdUseCustomNaming ? avdVnetworkCustomName : 'vnet-avd-${varComputeStorageResourcesNamingStandard}-001'
 var varVnetworkAvdSubnetName = avdUseCustomNaming ? avdVnetworkSubnetCustomName : 'snet-avd-${varComputeStorageResourcesNamingStandard}-001'
 var varVnetworkPrivateEndpointSubnetName = avdUseCustomNaming ? privateEndpointVnetworkSubnetCustomName : 'snet-pe-${varComputeStorageResourcesNamingStandard}-001'
+var varVnetworkAzureNetappFilesSubnetName = avdUseCustomNaming ? azureNetappFilesVnetworkSubnetCustomName : 'snet-anf-${varComputeStorageResourcesNamingStandard}-001'
 var varAvdNetworksecurityGroupName = avdUseCustomNaming ? avdNetworksecurityGroupCustomName : 'nsg-avd-${varComputeStorageResourcesNamingStandard}-001'
 var varPrivateEndpointNetworksecurityGroupName = avdUseCustomNaming ? privateEndpointNetworksecurityGroupCustomName : 'nsg-pe-${varComputeStorageResourcesNamingStandard}-001'
 var varAvdRouteTableName = avdUseCustomNaming ? avdRouteTableCustomName : 'route-avd-${varComputeStorageResourcesNamingStandard}-001'
@@ -773,7 +792,9 @@ var varFslogixScriptUri = '${varBaseScriptUri}scripts/Set-FSLogixRegKeys.ps1'
 var varFsLogixScript = './Set-FSLogixRegKeys.ps1'
 var varFslogixFileShareName = createAvdFslogixDeployment ? fslogixStorageAzureFiles.outputs.fileShareName : ''
 var varFslogixSharePath = '\\\\${varFslogixStorageName}.file.${environment().suffixes.storage}\\${varFslogixFileShareName}'
-var varFsLogixScriptArguments = '-volumeshare ${varFslogixSharePath}'
+var varAnfFslogixSharePath = fslogixStorageAzureFiles.outputs.anfMountPath
+var modifiedAnfFslogixSharePath = '\\\\${replace(varAnfFslogixSharePath, '/', '\\')}' // replace forward slash with backslash
+var varFsLogixScriptArguments = '-volumeshare ${modifiedAnfFslogixSharePath}' //varFslogixSharePath original variable
 var varAvdAgentPackageLocation = 'https://wvdportalstorageblob.blob.${environment().suffixes.storage}/galleryartifacts/Configuration_09-08-2022.zip'
 var varStorageAccountContributorRoleId = '17d1049b-9a84-46fb-8f53-869881c3d3ab'
 var varReaderRoleId = 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
@@ -1003,6 +1024,7 @@ module networking './modules/networking/deploy.bicep' = if (createAvdVnet) {
         vNetworkPeeringName: avdIdentityServiceProvider == 'AAD' ? '': varVnetworkPeeringName
         vNetworkAvdSubnetName: varVnetworkAvdSubnetName
         vNetworkPrivateEndpointSubnetName: varVnetworkPrivateEndpointSubnetName
+        vNetworkAzureNetappFilesSubnetName: varVnetworkAzureNetappFilesSubnetName
         createVnet: createAvdVnet
         createVnetPeering: varCreateVnetPeering
         vNetworkGatewayOnHub: vNetworkGatewayOnHub
@@ -1010,6 +1032,7 @@ module networking './modules/networking/deploy.bicep' = if (createAvdVnet) {
         sessionHostLocation: avdSessionHostLocation
         vNetworkAvdSubnetAddressPrefix: vNetworkAvdSubnetAddressPrefix
         vNetworkPrivateEndpointSubnetAddressPrefix: vNetworkPrivateEndpointSubnetAddressPrefix
+        vNetworkAzureNetappFilesSubnetAddressPrefix: vNetworkAzureNetappFilesSubnetAddressPrefix
         workloadSubsId: avdWorkloadSubsId
         dnsServers: varDnsServers
         tags: createResourceTags ? union(varCommonResourceTags,varAvdCostManagementParentResourceTag) : varAvdCostManagementParentResourceTag
@@ -1188,6 +1211,7 @@ module fslogixStorageAzureFiles './modules/storageAzureFiles/deploy.bicep' = if 
     name: 'Storage-Fslogix-Azure-Files-${time}'
     params: {
         storagePurpose: 'fslogix'
+        //storageType: storageType
         fileShareCustomName: fslogixFileShareCustomName
         identityServiceProvider: avdIdentityServiceProvider
         dscAgentPackageLocation: varStorageAzureFilesDscAgentPackageLocation
@@ -1202,6 +1226,7 @@ module fslogixStorageAzureFiles './modules/storageAzureFiles/deploy.bicep' = if 
         applicationSecurityGroupResourceId: createAvdVnet ? '${networking.outputs.applicationSecurityGroupResourceId}' : ''
         computeObjectsRgName: varComputeObjectsRgName
         domainJoinUserName: avdDomainJoinUserName
+        dnsServers: customDnsIps
         wrklKvName: varWrklKvName
         serviceObjectsRgName: varServiceObjectsRgName
         fileShareQuotaSize: fslogixFileShareQuotaSize
@@ -1214,6 +1239,7 @@ module fslogixStorageAzureFiles './modules/storageAzureFiles/deploy.bicep' = if 
         storageObjectsRgName: varStorageObjectsRgName
         avdSubnetId: createAvdVnet ? '${networking.outputs.virtualNetworkResourceId}/subnets/${varVnetworkAvdSubnetName}' : existingVnetAvdSubnetResourceId
         privateEndpointSubnetId: createAvdVnet ? '${networking.outputs.virtualNetworkResourceId}/subnets/${varVnetworkPrivateEndpointSubnetName}' : existingVnetPrivateEndpointSubnetResourceId
+        azureNetappFilesSubnetId: createAvdVnet ? '${networking.outputs.virtualNetworkResourceId}/subnets/${varVnetworkAzureNetappFilesSubnetName}' : existingVnetAzureNetappFilesSubnetResourceId
         enableAcceleratedNetworking: enableAcceleratedNetworking
         createAvdVnet: createAvdVnet
         vmLocalUserName: avdVmLocalUserName
@@ -1224,6 +1250,7 @@ module fslogixStorageAzureFiles './modules/storageAzureFiles/deploy.bicep' = if 
         storageManagedIdentityResourceId: varCreateStorageDeployment ? managedIdentitiesRoleAssign.outputs.managedIdentityResourceId : ''
         fileShareMultichannel: (fslogixStoragePerformance == 'Premium') ? true : false
         storageSku: varFslogixStorageSku
+        anfServiceLevel: anfServiceLevel
         marketPlaceGalleryWindowsManagementVm: varMarketPlaceGalleryWindows[avdOsImage]
         useSharedImage: useSharedImage
         tags: createResourceTags ? union(varAllResourceTags,varAvdCostManagementParentResourceTag) : varAvdCostManagementParentResourceTag
@@ -1246,6 +1273,7 @@ module msixStorageAzureFiles './modules/storageAzureFiles/deploy.bicep' = if (va
     name: 'Storage-Msix-AzureFiles-${time}'
     params: {
         storagePurpose: 'msix'
+        //storageType: storageType
         fileShareCustomName: msixFileShareCustomName
         identityServiceProvider: avdIdentityServiceProvider
         dscAgentPackageLocation: varStorageAzureFilesDscAgentPackageLocation
@@ -1260,6 +1288,7 @@ module msixStorageAzureFiles './modules/storageAzureFiles/deploy.bicep' = if (va
         applicationSecurityGroupResourceId: createAvdVnet ? '${networking.outputs.applicationSecurityGroupResourceId}' : ''
         computeObjectsRgName: varComputeObjectsRgName
         domainJoinUserName: avdDomainJoinUserName
+        dnsServers: customDnsIps
         wrklKvName: varWrklKvName
         serviceObjectsRgName: varServiceObjectsRgName
         fileShareQuotaSize: msixFileShareQuotaSize
@@ -1272,6 +1301,7 @@ module msixStorageAzureFiles './modules/storageAzureFiles/deploy.bicep' = if (va
         storageObjectsRgName: varStorageObjectsRgName
         avdSubnetId: createAvdVnet ? '${networking.outputs.virtualNetworkResourceId}/subnets/${varVnetworkAvdSubnetName}' : existingVnetAvdSubnetResourceId
         privateEndpointSubnetId: createAvdVnet ? '${networking.outputs.virtualNetworkResourceId}/subnets/${varVnetworkPrivateEndpointSubnetName}' : existingVnetPrivateEndpointSubnetResourceId
+        azureNetappFilesSubnetId: createAvdVnet ? '${networking.outputs.virtualNetworkResourceId}/subnets/${varVnetworkAzureNetappFilesSubnetName}' : existingVnetAzureNetappFilesSubnetResourceId
         enableAcceleratedNetworking: enableAcceleratedNetworking
         createAvdVnet: createAvdVnet
         vmLocalUserName: avdVmLocalUserName
@@ -1282,6 +1312,7 @@ module msixStorageAzureFiles './modules/storageAzureFiles/deploy.bicep' = if (va
         storageManagedIdentityResourceId: varCreateStorageDeployment ? managedIdentitiesRoleAssign.outputs.managedIdentityResourceId : ''
         fileShareMultichannel: (msixStoragePerformance == 'Premium') ? true : false
         storageSku: varMsixStorageSku
+        anfServiceLevel: anfServiceLevel
         marketPlaceGalleryWindowsManagementVm: varMarketPlaceGalleryWindows[avdOsImage]
         useSharedImage: useSharedImage
         tags: createResourceTags ? union(varAllResourceTags,varAvdCostManagementParentResourceTag) : varAvdCostManagementParentResourceTag
@@ -1342,7 +1373,7 @@ module sessionHosts './modules/avdSessionHosts/deploy.bicep' = if (avdDeploySess
         fsLogixScript: (avdIdentityServiceProvider != 'AAD') ? varFsLogixScript: ''
         fsLogixScriptArguments: (avdIdentityServiceProvider != 'AAD') ? varFsLogixScriptArguments: ''
         fslogixScriptUri: (avdIdentityServiceProvider != 'AAD') ? varFslogixScriptUri: ''
-        fslogixSharePath: (avdIdentityServiceProvider != 'AAD') ? varFslogixSharePath: ''
+        fslogixSharePath: (avdIdentityServiceProvider != 'AAD') ? varAnfFslogixSharePath: '' //make sure to change back
         marketPlaceGalleryWindows: varMarketPlaceGalleryWindows[avdOsImage]
         useSharedImage: useSharedImage
         tags: createResourceTags ? union(varAllResourceTags,varAvdCostManagementParentResourceTag) : varAvdCostManagementParentResourceTag

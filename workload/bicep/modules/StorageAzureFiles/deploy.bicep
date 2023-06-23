@@ -16,6 +16,9 @@ param computeTimeZone string
 @description('Resource Group Name for Azure Files.')
 param storageObjectsRgName string
 
+//@description('Storage Type.')
+//param storageType string
+
 @description('Required, The service providing domain services for Azure Virtual Desktop.')
 param identityServiceProvider string
 
@@ -30,6 +33,9 @@ param enableAcceleratedNetworking bool
 
 @description('Private endpoint subnet ID.')
 param privateEndpointSubnetId string
+
+@description('Azure Netapp Files designated subnet ID.')
+param azureNetappFilesSubnetId string
 
 @description('Create new virtual network.')
 param createAvdVnet bool
@@ -67,6 +73,9 @@ param vmLocalUserName string
 @description('AD domain name.')
 param identityDomainName string
 
+@description('DNS Server IPs for Azure Netapp Files connection.')
+param dnsServers string
+
 @description('Keyvault name to get credentials from.')
 param wrklKvName string
 
@@ -81,6 +90,18 @@ param applicationSecurityGroupResourceId string
 
 @description('Azure Files storage account SKU.')
 param storageSku string
+
+@description('Azure Netapp Files Service Level')
+param anfServiceLevel string
+
+@description('Optional. The network features.')
+param anfNetworkFeatures string = 'Standard'
+
+@description('Optional. The security style of volume. Only \'Ntfs\' is supported.')
+param anfSecurityStyle string = 'Ntfs'
+
+@description('Optional. Enables SMB continuously available share property. Only applicable for SMB protocol type. Must be whitelisted.')
+param anfSmbContinuouslyAvailable bool = false
 
 @description('*Azure File share quota')
 param fileShareQuotaSize int
@@ -153,6 +174,13 @@ param fileShareCustomName string
 // =========== //
 var varAzureCloudName = environment().name
 var varStoragePurposeLower = toLower(storagePurpose)
+
+var varCleanOuPath = 'CN=${replace(ouStgPath, '"', '')}'
+var varAnfSmbServerFqdn = netAppAccount.outputs.smbServerFqdn
+var varAnfMountPath = '${varAnfSmbServerFqdn}/${varFileShareName}'
+
+//var varEscapedOrganizationalUnit = base64ToString(ouStgPath)
+//var varOutStgPath = 'CN=${varEscapedOrganizationalUnit}'
 var varAvdFileShareLogsDiagnostic = [
     'allLogs'
     //'StorageRead'
@@ -163,11 +191,14 @@ var varAvdFileShareMetricsDiagnostic = [
     'Transaction'
 ]
 var varFileShareName = useCustomNaming ? fileShareCustomName : '${varStoragePurposeLower}-pc-${deploymentPrefixLowercase}-001'
+//var netAppAccountName = useCustomNaming ? netAppAccountCustomName : '${varStoragePurposeLower}-pc-${deploymentPrefixLowercase}-001'
+var netAppAccountName = 'netAppAccount-001'
 var varWrklStoragePrivateEndpointName = 'pe-${varStorageName}-file'
 //var varStoragePurposeLowerPrefix = substring(varStoragePurposeLower, 0,2)
 var varStoragePurposeAcronym = (storagePurpose == 'fslogix') ? 'fsl': ((storagePurpose == 'msix') ? 'msx': '')
 var varStorageName = useCustomNaming ? '${storageAccountPrefixCustomName}${varStoragePurposeAcronym}${deploymentPrefixLowercase}${namingUniqueStringSixChar}' : 'st${varStoragePurposeAcronym}${deploymentPrefixLowercase}${namingUniqueStringSixChar}'
 var varStorageToDomainScriptArgs = '-DscPath ${dscAgentPackageLocation} -StorageAccountName ${varStorageName} -StorageAccountRG ${storageObjectsRgName} -StoragePurpose ${storagePurpose} -DomainName ${identityDomainName} -IdentityServiceProvider ${identityServiceProvider} -AzureCloudEnvironment ${varAzureCloudName} -SubscriptionId ${workloadSubsId} -DomainAdminUserName ${domainJoinUserName} -CustomOuPath ${storageCustomOuPath} -OUName ${ouStgPath} -CreateNewOU ${createOuForStorageString} -ShareName ${varFileShareName} -ClientId ${managedIdentityClientId}'
+//var varAnfNtfs = 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -DomainJoinPassword "${DomainJoinPassword}" -DomainJoinUserPrincipalName ${domainJoinUserName} -FslogixSolution ${FslogixSolution} -SecurityPrincipalNames "${SecurityPrincipalNames}" -SmbServerLocation ${SmbServerLocation} -StorageSolution ${StorageSolution}'
 
 // =========== //
 // Deployments //
@@ -245,6 +276,51 @@ module storageAndFile '../../../../carml/1.3.0/Microsoft.Storage/storageAccounts
         diagnosticLogsRetentionInDays: diagnosticLogsRetentionInDays
     }
 }
+
+module netAppAccount '../../../../carml/1.3.0/Microsoft.NetApp/netAppAccounts/deploy.bicep' =  {
+  name: 'Storage-anf-${storagePurpose}-${time}'
+  scope: resourceGroup('${workloadSubsId}', '${storageObjectsRgName}')
+  params:{
+    name: netAppAccountName
+    location: sessionHostLocation
+    domainName: identityDomainName
+    dnsServers: dnsServers
+    domainJoinUser: split(domainJoinUserName, '@')[0]
+    domainJoinPassword: avdWrklKeyVaultget.getSecret('domainJoinUserPassword')
+    domainJoinOU: varCleanOuPath
+    smbServerNamePrefix: 'anf-${sessionHostLocation}'
+    tags: tags
+    capacityPools: [
+      {
+        name: varStorageName
+        size: 4398046511104
+        coolAccess: false
+        qosType: 'Auto'
+        serviceLevel: anfServiceLevel
+        volumes: [
+            {
+              name: varFileShareName
+              usageThreshold: 107374182400
+              protocolTypes: [ 
+                'CIFS' 
+             ]
+              subnetResourceId: azureNetappFilesSubnetId
+              exportPolicyRules: []
+              roleAssignments: []
+              networkFeatures: anfNetworkFeatures
+              securityStyle: anfSecurityStyle
+              smbContinuouslyAvailable: anfSmbContinuouslyAvailable
+            }
+        ]
+      }
+      ]
+    
+  }
+  dependsOn: [
+    managementVm
+] 
+}
+
 
 // Call on the VM.
 //resource managementVMget 'Microsoft.Compute/virtualMachines@2022-11-01' existing = {
@@ -364,10 +440,48 @@ module addShareToDomainScript './.bicep/azureFilesDomainJoin.bicep' = if(identit
         managementVmWait
     ]
 }
- 
+
+/*module anfNtfsPermissions'./.bicep/azureFilesDomainJoin.bicep' = if(storageType == azureNetappFiles)  {
+    name: '${storagePurpose}-NtfsPermissions_${time}'
+    scope: resourceGroup('${workloadSubsId}', '${serviceObjectsRgName}')
+    params: {
+        _artifactsLocation: _artifactsLocation
+        _artifactsLocationSasToken: _artifactsLocationSasToken
+        CommandToExecute: 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -DomainJoinPassword "${DomainJoinPassword}" -DomainJoinUserPrincipalName ${DomainJoinUserPrincipalName} -FslogixSolution ${FslogixSolution} -SecurityPrincipalNames "${SecurityPrincipalNames}" -SmbServerLocation ${SmbServerLocation} -StorageSolution ${StorageSolution}'
+        DeploymentScriptNamePrefix: DeploymentScriptNamePrefix
+        Location: sessionHostLocation
+        ManagementVmName: managementVmName
+        UserAssignedIdentityResourceId: storageManagedIdentityResourceId
+  }
+  dependsOn: [
+    
+    managementVmWait
+  ]
+}
+    
+    
+    
+    scope: resourceGroup('${workloadSubsId}', '${serviceObjectsRgName}')
+    name: 'Add-${storagePurpose}-Storage-Setup-${time}'
+    params: {
+        location: sessionHostLocation
+        name: managementVmName
+        file: storageToDomainScript
+        scriptArguments: varStorageToDomainScriptArgs
+        domainJoinUserPassword: avdWrklKeyVaultget.getSecret('domainJoinUserPassword')
+        baseScriptUri: storageToDomainScriptUri
+    }
+    dependsOn: [
+        netAppAccount
+        managementVmWait
+    ]
+}
+ */
+
 // =========== //
 //   Outputs   //
 // =========== //
 
 output storageAccountName string = storageAndFile.outputs.name
 output fileShareName string = varFileShareName
+output anfMountPath string = varAnfMountPath

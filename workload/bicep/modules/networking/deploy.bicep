@@ -55,11 +55,17 @@ param vNetworkAvdSubnetName string
 @description('Private endpoint subnet Name.')
 param vNetworkPrivateEndpointSubnetName string
 
+@description('Azure Netapp Files subnet Name.')
+param vNetworkAzureNetappFilesSubnetName string
+
 @description('AVD VNet subnet address prefix.')
 param vNetworkAvdSubnetAddressPrefix string
 
 @description('Private endpoint VNet subnet address prefix.')
 param vNetworkPrivateEndpointSubnetAddressPrefix string
+
+@description('Private endpoint VNet subnet address prefix.')
+param vNetworkAzureNetappFilesSubnetAddressPrefix string
 
 @description('custom DNS servers IPs')
 param dnsServers array
@@ -324,6 +330,22 @@ module virtualNetwork '../../../../carml/1.3.0/Microsoft.Network/virtualNetworks
                 privateLinkServiceNetworkPolicies: 'Enabled'
                 networkSecurityGroupId: networksecurityGroupPrivateEndpoint.outputs.resourceId
                 routeTableId: routeTablePrivateEndpoint.outputs.resourceId
+            }
+            {
+                name: vNetworkAzureNetappFilesSubnetName
+                addressPrefix: vNetworkAzureNetappFilesSubnetAddressPrefix
+                delegations: [
+                    {
+                      name: 'NetAppDelegation'
+                      properties: {
+                        serviceName: 'Microsoft.Netapp/volumes'
+                      }                     
+                    }
+                  ]
+                privateEndpointNetworkPolicies: 'Disabled'
+                //privateLinkServiceNetworkPolicies: 'Enabled'
+                networkSecurityGroupId: networksecurityGroupAvd.outputs.resourceId //create own NSG
+                routeTableId: routeTableAvd.outputs.resourceId //create own routeTable
             }
         ]
         tags: tags

@@ -17,7 +17,7 @@ param location string = resourceGroup().location
   'StandardZRS'
   'Ultra'
 ])
-param serviceLevel string = 'Standard'
+param serviceLevel string = 'Standard' //needs fixing
 
 @description('Optional. A unique file path for the volume. This is the name of the volume export. A volume is mounted using the export path. File path must start with an alphabetical character and be unique within the subscription.')
 param creationToken string = name
@@ -30,6 +30,15 @@ param protocolTypes array = []
 
 @description('Required. The Azure Resource URI for a delegated subnet. Must have the delegation Microsoft.NetApp/volumes.')
 param subnetResourceId string
+
+@description('Optional. The network features.')
+param networkFeatures string = 'Standard'
+
+@description('Optional. The security style of volume.')
+param securityStyle string = 'Ntfs'
+
+@description('Optional. Enables SMB continuously available share property. Only applicable for SMB protocol type. Must be whitelisted.')
+param smbContinuouslyAvailable bool = false
 
 @description('Optional. Export policy rules.')
 param exportPolicyRules array = []
@@ -70,6 +79,10 @@ resource volume 'Microsoft.NetApp/netAppAccounts/capacityPools/volumes@2022-05-0
     usageThreshold: usageThreshold
     protocolTypes: protocolTypes
     subnetId: subnetResourceId
+    smbContinuouslyAvailable: smbContinuouslyAvailable
+    networkFeatures: networkFeatures
+    securityStyle: securityStyle
+    snapshotDirectoryVisible: true
     exportPolicy: !empty(exportPolicyRules) ? {
       rules: exportPolicyRules
     } : null
@@ -100,3 +113,7 @@ output resourceGroupName string = resourceGroup().name
 
 @description('The location the resource was deployed into.')
 output location string = volume.location
+
+@description('SMB Server FQDN.')
+output smbServerFqdn string = volume.properties.mountTargets[0].smbServerFqdn
+
