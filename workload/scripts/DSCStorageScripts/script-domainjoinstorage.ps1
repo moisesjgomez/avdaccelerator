@@ -52,7 +52,19 @@ param(
 
 	[Parameter(Mandatory = $true)]
 	[ValidateNotNullOrEmpty()]
-	[string] $AzureCloudEnvironment
+	[string] $AzureCloudEnvironment,
+
+    [Parameter(Mandatory = $true)]
+	[ValidateNotNullOrEmpty()]
+	[string] $StorageSolution,
+    
+    [Parameter(Mandatory = $true)]
+	[ValidateNotNullOrEmpty()]
+	[string] $AnfMountPath,
+
+	[Parameter(Mandatory = $true)]
+	[ValidateNotNullOrEmpty()]
+	[string] $SmbServerName
 )
 
 $ErrorActionPreference = "Stop"
@@ -76,6 +88,11 @@ Install-Module -Name Az.Storage -Force
 Install-Module -Name Az.Network -Force
 Install-Module -Name Az.Resources -Force
 
+    ##############################################################
+    #  Install Prerequisites
+    ##############################################################
+    # Install Active Directory PowerShell module
+
 if ($IdentityServiceProvider -eq 'ADDS') {
 	Write-Log "Installing AzFilesHybrid module"
 	$AzFilesZipLocation = Get-ChildItem -Path $PSScriptRoot -Filter "AzFilesHybrid*.zip"
@@ -96,15 +113,48 @@ if ($IdentityServiceProvider -eq 'ADDS') {
 		Request-OSFeature -WindowsClientCapability "Rsat.ActiveDirectory.DS-LDS.Tools" -WindowsServerFeature "RSAT-AD-PowerShell"
 		Import-Module -Name activedirectory -Force -Verbose
 	}
-	$IsStorageAccountDomainJoined = Get-ADObject -Filter 'ObjectClass -eq "Computer"' | Where-Object { $_.Name -eq $StorageAccountName }
-	if ($IsStorageAccountDomainJoined) {
-		Write-Log "Storage account $StorageAccountName is already domain joined."
+	
+}
+
+<# Write-Log "Connecting to managed identity account"
+Add-AzAccount -Environment $AzureCloudEnvironment -identity
+Connect-AzAccount -Identity -AccountId $ClientId
+
+Write-Log "Setting Azure subscription to $SubscriptionId"
+Select-AzSubscription -SubscriptionId $SubscriptionId
+ #>
+
+# Remove Administrators from full control
+
+if ($StoragePurpose -eq 'fslogix') {
+	$DriveLetter = 'Y'
+	 }
+if ($StoragePurpose -eq 'msix') {
+	$DriveLetter = 'X'
+	 }
+Write-Log "Mounting $StoragePurpose file share on Drive $DriveLetter"
+		
+#$FileShareLocation = '\\'+ $StorageAccountName + '.file.core.windows.net\'+$ShareName
+#$StorageAccountNameFull = $StorageAccountName + '.file.core.windows.net' 
+##delete this, also using $ServerPath
+
+switch ($StorageSolution)
+{
+	'AzureStorageAccount' {
+
+        $FileShareLocation = '\\'+ $StorageAccountName + '.file.core.windows.net\'+$ShareName
+        $ServerPath = $StorageAccountName + '.file.core.windows.net'
+
+        $IsStorageAccountDomainJoined = Get-ADObject -Filter 'ObjectClass -eq "Computer"' | Where-Object { $_.Name -eq $ServerPath }
+	    if ($IsStorageAccountDomainJoined) {
+		Write-Log "Storage account $ServerName is already domain joined."
 		return
 	}
-	if ( $CreateNewOU -eq 'true') {
-		Write-Log "Creating AD Organizational unit $OUName'"
-		Get-ADOrganizationalUnit -Filter 'Name -like $OUName'
-		$OrganizationalUnit = Get-ADOrganizationalUnit -Filter 'Name -like $OUName '
+
+	    if ( $CreateNewOU -eq 'true') {
+		    Write-Log "Creating AD Organizational unit $OUName'"
+		    Get-ADOrganizationalUnit -Filter 'Name -like $OUName'
+		    $OrganizationalUnit = Get-ADOrganizationalUnit -Filter 'Name -like $OUName '
 		if (-not $OrganizationalUnit) {
 			foreach ($DCName in $DomainName.split('.')) {
 				$OUPath = $OUPath + ',DC=' + $DCName
@@ -115,59 +165,78 @@ if ($IdentityServiceProvider -eq 'ADDS') {
 		}
 
 	}
-}
 
-Write-Log "Connecting to managed identity account"
-# Add-AzAccount -Environment $AzureCloudEnvironment -identity
-Connect-AzAccount -Identity -AccountId $ClientId
+        if ($IdentityServiceProvider -eq 'ADDS') {
+            Write-Log "Domain joining storage account $StorageAccountName in Resource group $StorageAccountRG"
+            if ( $CustomOuPath -eq 'true') {
+                Join-AzStorageAccountForAuth -ResourceGroupName $StorageAccountRG -StorageAccountName $StorageAccountName -DomainAccountType 'ComputerAccount' -OrganizationalUnitDistinguishedName $OUName -OverwriteExistingADObject
+                Write-Log -Message "Successfully domain joined the storage account $StorageAccountName to custom OU path $OUName"
+            } else {
+                Join-AzStorageAccountForAuth -ResourceGroupName $StorageAccountRG -StorageAccountName $StorageAccountName -DomainAccountType 'ComputerAccount' -OrganizationalUnitName $OUName -OverwriteExistingADObject
+                Write-Log -Message "Successfully domain joined the storage account $StorageAccountName to default OU path $OUName"
+            }
+        }
+        ## Setting default permissions 
+        #$defaultPermission = "None | StorageFileDataSmbShareContributor | StorageFileDataSmbShareReader | StorageFileDataSmbShareElevatedContributor" # Set the default permission of your choice
 
-Write-Log "Setting Azure subscription to $SubscriptionId"
-Select-AzSubscription -SubscriptionId $SubscriptionId
+        if ($IdentityServiceProvider -eq 'ADDS') {
+            $defaultPermission = "StorageFileDataSmbShareContributor" # Set the default permission of your choice
+            Write-Log "Setting up the default permission of $defaultPermission to storage account $StorageAccountName in $StorageAccountRG"
+            $account = Set-AzStorageAccount -ResourceGroupName $StorageAccountRG -AccountName $StorageAccountName -DefaultSharePermission $defaultPermission
+            $account.AzureFilesIdentityBasedAuth
+        }
 
-if ($IdentityServiceProvider -eq 'ADDS') {
-	Write-Log "Domain joining storage account $StorageAccountName in Resource group $StorageAccountRG"
-	if ( $CustomOuPath -eq 'true') {
-		Join-AzStorageAccountForAuth -ResourceGroupName $StorageAccountRG -StorageAccountName $StorageAccountName -DomainAccountType 'ComputerAccount' -OrganizationalUnitDistinguishedName $OUName -OverwriteExistingADObject
-		Write-Log -Message "Successfully domain joined the storage account $StorageAccountName to custom OU path $OUName"
-	} else {
-		Join-AzStorageAccountForAuth -ResourceGroupName $StorageAccountRG -StorageAccountName $StorageAccountName -DomainAccountType 'ComputerAccount' -OrganizationalUnitName $OUName -OverwriteExistingADObject
-		Write-Log -Message "Successfully domain joined the storage account $StorageAccountName to default OU path $OUName"
-	}
-}
-
-## Setting default permissions 
-#$defaultPermission = "None | StorageFileDataSmbShareContributor | StorageFileDataSmbShareReader | StorageFileDataSmbShareElevatedContributor" # Set the default permission of your choice
-
-$defaultPermission = "StorageFileDataSmbShareContributor" # Set the default permission of your choice
-Write-Log "Setting up the default permission of $defaultPermission to storage account $StorageAccountName in $StorageAccountRG"
-$account = Set-AzStorageAccount -ResourceGroupName $StorageAccountRG -AccountName $StorageAccountName -DefaultSharePermission $defaultPermission
-$account.AzureFilesIdentityBasedAuth
-
-# Remove Administrators from full control
-
-
-if ($StoragePurpose -eq 'fslogix') {
-	$DriveLetter = 'Y'
-	 }
-if ($StoragePurpose -eq 'msix') {
-	$DriveLetter = 'X'
-	 }
-Write-Log "Mounting $StoragePurpose storage account on Drive $DriveLetter"
-		
-$FileShareLocation = '\\'+ $StorageAccountName + '.file.core.windows.net\'+$ShareName
-$StorageAccountNameFull = $StorageAccountName + '.file.core.windows.net'
-$connectTestResult = Test-NetConnection -ComputerName $StorageAccountNameFull -Port 445
-Write-Log "Test connection access to port 445 for $StorageAccountNameFull was $connectTestResult"
-Try {
-    Write-Log "Mounting Profile storage $StorageAccountName as a drive $DriveLetter"
-    if (-not (Get-PSDrive -Name $DriveLetter -ErrorAction SilentlyContinue)) {
-		
         $UserStorage = "/user:Azure\$StorageAccountName"
 		Write-Log "User storage: $UserStorage"
         $StorageKey = (Get-AzStorageAccountKey -ResourceGroupName $StorageAccountRG -AccountName $StorageAccountName) | Where-Object {$_.KeyName -eq "key1"}
 		Write-Log "Storage key: $StorageKey"
+
+        $Credential = $StorageKey.Value
+    }
+	'AzureNetappFiles' {
+		$FileShareLocation = $anfmountpath
+        $ServerPath = $SmbServerName
+
+        # Create Domain credential
+        $DomainUsername = $DomainJoinUserPrincipalName.split('@')[0]
+        $DomainPassword = ConvertTo-SecureString -String $DomainJoinPassword -AsPlainText -Force
+        [pscredential]$DomainCredential = New-Object System.Management.Automation.PSCredential ($DomainUsername, $DomainPassword)
+        $Credential = $DomainPassword
+
+        # Get Domain information
+        $Domain = Get-ADDomain -Credential $DomainCredential -Current 'LocalComputer'
+        $UserStorage = "/user:$($Domain.NetBIOSName)\$($DomainUsername)"
+		Write-Log "User storage: $UserStorage"
+        Write-Log -Message "Domain information collection succeeded" -Type 'INFO'
+	}
+}
+
+#if($StorageSolution -eq 'AzureNetAppFiles' -and $ActiveDirectorySolution -eq 'ADDS') ##permissions must have domain admin to authenticate
+#{
+    # Create Domain credential
+    #$DomainUsername = $DomainJoinUserPrincipalName
+    #$DomainPassword = ConvertTo-SecureString -String $DomainJoinPassword -AsPlainText -Force
+    #[pscredential]$DomainCredential = New-Object System.Management.Automation.PSCredential ($DomainUsername, $DomainPassword)
+
+    # Get Domain information
+    #$Domain = Get-ADDomain -Credential $DomainCredential -Current 'LocalComputer'
+    #Write-Log -Message "Domain information collection succeeded" -Type 'INFO'
+#}
+
+
+$connectTestResult = Test-NetConnection -ComputerName $ServerPath -Port 445
+Write-Log "Test connection access to port 445 for $ServerPath was $connectTestResult"
+Try {
+    
+    Write-Log "Mounting storage $ServerPath as a drive $DriveLetter"
+    if (-not (Get-PSDrive -Name $DriveLetter -ErrorAction SilentlyContinue)) {
+		
+        #$UserStorage = "/user:Azure\$StorageAccountName"
+		#Write-Log "User storage: $UserStorage"
+        #$StorageKey = (Get-AzStorageAccountKey -ResourceGroupName $StorageAccountRG -AccountName $StorageAccountName) | Where-Object {$_.KeyName -eq "key1"}
+		#Write-Log "Storage key: $StorageKey"
 		Write-Log "File Share location: $FileShareLocation"
-		net use ${DriveLetter}: $FileShareLocation $UserStorage $StorageKey.Value
+		net use ${DriveLetter}: $FileShareLocation $UserStorage $Credential ##password
 		#New-PSDrive -Name $DriveLetter -PSProvider FileSystem -Root $FileShareLocation -Persist
 	}
     else {

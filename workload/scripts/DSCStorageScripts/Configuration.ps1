@@ -62,7 +62,19 @@ param
 	
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
-    [string] $DomainAdminUserPassword
+    [string] $DomainAdminUserPassword,
+
+    [Parameter(Mandatory = $true)]
+	[ValidateNotNullOrEmpty()]
+	[string] $AnfMountPath,
+
+	[Parameter(Mandatory = $true)]
+	[ValidateNotNullOrEmpty()]
+	[string] $SmbServerName,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string] $StorageSolution
 )
 
 
@@ -124,7 +136,19 @@ Configuration DomainJoinFileShare
 	
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
-        [string] $DomainAdminUserPassword
+        [string] $DomainAdminUserPassword,
+
+        [Parameter(Mandatory = $true)]
+	    [ValidateNotNullOrEmpty()]
+	    [string] $AnfMountPath,
+
+	    [Parameter(Mandatory = $true)]
+	    [ValidateNotNullOrEmpty()]
+	    [string] $SmbServerName,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string] $StorageSolution
     )
     
     # Import the module that contains the File resource.
@@ -154,7 +178,7 @@ Configuration DomainJoinFileShare
                 . (Join-Path $using:ScriptPath "Logger.ps1")
                 try {
                     Write-Log "DSC DomainJoinStorage SetScript Domain joining storage account $Using:StorageAccountName"
-                    & "$using:ScriptPath\Script-DomainJoinStorage.ps1" -StorageAccountName $Using:StorageAccountName -StorageAccountRG $Using:StorageAccountRG -SubscriptionId $Using:SubscriptionId -ClientId $Using:ClientId -ShareName $Using:ShareName -DomainName $Using:DomainName -IdentityServiceProvider $Using:IdentityServiceProvider -AzureCloudEnvironment $Using:AzureCloudEnvironment -CustomOuPath $Using:CustomOuPath -OUName $Using:OUName -CreateNewOU $Using:CreateNewOU -StoragePurpose $Using:StoragePurpose
+                    & "$using:ScriptPath\Script-DomainJoinStorage.ps1" -StorageAccountName $Using:StorageAccountName -StorageAccountRG $Using:StorageAccountRG -SubscriptionId $Using:SubscriptionId -ClientId $Using:ClientId -ShareName $Using:ShareName -DomainName $Using:DomainName -IdentityServiceProvider $Using:IdentityServiceProvider -AzureCloudEnvironment $Using:AzureCloudEnvironment -CustomOuPath $Using:CustomOuPath -OUName $Using:OUName -CreateNewOU $Using:CreateNewOU -StoragePurpose $Using:StoragePurpose -StorageSolution $Using:StorageSolution -AnfMountPath $Using:AnfMountPath -SmbServerName $Using:SmbServerName
 
                     Write-Log "Successfully domain joined and/or NTFS permission set on Storage account"
                 }
