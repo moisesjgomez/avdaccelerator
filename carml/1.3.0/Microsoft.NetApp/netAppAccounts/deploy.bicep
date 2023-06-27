@@ -131,4 +131,8 @@ output resourceGroupName string = resourceGroup().name
 @description('The location the resource was deployed into.')
 output location string = netAppAccount.location
 
+@description('ANF SMB server FQDN.')
 output smbServerFqdn string = netAppAccount_capacityPools[0].outputs.smbServerFqdn
+
+@description('ANF SMB server FQDN.')
+output smbServerName string = netAppAccount.properties.activeDirectories[0].smbServerName

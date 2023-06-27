@@ -88,6 +88,9 @@ param sessionHostOuPath string
 @description('Application Security Group (ASG) for the session hosts.')
 param applicationSecurityGroupResourceId string
 
+@description('Storage solution. Azure Files or Azure Netapp Files.')
+param storageSolution string
+
 @description('Azure Files storage account SKU.')
 param storageSku string
 
@@ -176,6 +179,7 @@ var varAzureCloudName = environment().name
 var varStoragePurposeLower = toLower(storagePurpose)
 
 var varCleanOuPath = 'CN=${replace(ouStgPath, '"', '')}'
+var varSmbServerName = netAppAccount.outputs.smbServerName
 var varAnfSmbServerFqdn = netAppAccount.outputs.smbServerFqdn
 var varAnfMountPath = '${varAnfSmbServerFqdn}/${varFileShareName}'
 
@@ -197,7 +201,7 @@ var varWrklStoragePrivateEndpointName = 'pe-${varStorageName}-file'
 //var varStoragePurposeLowerPrefix = substring(varStoragePurposeLower, 0,2)
 var varStoragePurposeAcronym = (storagePurpose == 'fslogix') ? 'fsl': ((storagePurpose == 'msix') ? 'msx': '')
 var varStorageName = useCustomNaming ? '${storageAccountPrefixCustomName}${varStoragePurposeAcronym}${deploymentPrefixLowercase}${namingUniqueStringSixChar}' : 'st${varStoragePurposeAcronym}${deploymentPrefixLowercase}${namingUniqueStringSixChar}'
-var varStorageToDomainScriptArgs = '-DscPath ${dscAgentPackageLocation} -StorageAccountName ${varStorageName} -StorageAccountRG ${storageObjectsRgName} -StoragePurpose ${storagePurpose} -DomainName ${identityDomainName} -IdentityServiceProvider ${identityServiceProvider} -AzureCloudEnvironment ${varAzureCloudName} -SubscriptionId ${workloadSubsId} -DomainAdminUserName ${domainJoinUserName} -CustomOuPath ${storageCustomOuPath} -OUName ${ouStgPath} -CreateNewOU ${createOuForStorageString} -ShareName ${varFileShareName} -ClientId ${managedIdentityClientId}'
+var varStorageToDomainScriptArgs = '-DscPath ${dscAgentPackageLocation} -StorageAccountName ${varStorageName} -StorageAccountRG ${storageObjectsRgName} -StoragePurpose ${storagePurpose} -DomainName ${identityDomainName} -IdentityServiceProvider ${identityServiceProvider} -AzureCloudEnvironment ${varAzureCloudName} -SubscriptionId ${workloadSubsId} -DomainAdminUserName ${domainJoinUserName} -CustomOuPath ${storageCustomOuPath} -OUName ${ouStgPath} -CreateNewOU ${createOuForStorageString} -ShareName ${varFileShareName} -ClientId ${managedIdentityClientId} -StorageSolution ${storageSolution} -AnfMountPath ${varAnfMountPath} -SmbServerName ${varSmbServerName}'
 //var varAnfNtfs = 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -DomainJoinPassword "${DomainJoinPassword}" -DomainJoinUserPrincipalName ${domainJoinUserName} -FslogixSolution ${FslogixSolution} -SecurityPrincipalNames "${SecurityPrincipalNames}" -SmbServerLocation ${SmbServerLocation} -StorageSolution ${StorageSolution}'
 
 // =========== //
