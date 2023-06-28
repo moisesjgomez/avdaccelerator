@@ -281,7 +281,7 @@ module storageAndFile '../../../../carml/1.3.0/Microsoft.Storage/storageAccounts
     }
 }
 
-module netAppAccount '../../../../carml/1.3.0/Microsoft.NetApp/netAppAccounts/deploy.bicep' =  {
+module netAppAccount '../../../../carml/1.3.0/Microsoft.NetApp/netAppAccounts/deploy.bicep' = {
   name: 'Storage-anf-${storagePurpose}-${time}'
   scope: resourceGroup('${workloadSubsId}', '${storageObjectsRgName}')
   params:{

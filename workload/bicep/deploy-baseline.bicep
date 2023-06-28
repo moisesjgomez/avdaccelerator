@@ -1211,7 +1211,7 @@ module fslogixStorageAzureFiles './modules/storageAzureFiles/deploy.bicep' = if 
     name: 'Storage-Fslogix-Azure-Files-${time}'
     params: {
         storagePurpose: 'fslogix'
-        storageSolution: 'azureNetappFiles'
+        storageSolution: 'AzureNetappFiles'
         fileShareCustomName: fslogixFileShareCustomName
         identityServiceProvider: avdIdentityServiceProvider
         dscAgentPackageLocation: varStorageAzureFilesDscAgentPackageLocation
@@ -1273,7 +1273,7 @@ module msixStorageAzureFiles './modules/storageAzureFiles/deploy.bicep' = if (va
     name: 'Storage-Msix-AzureFiles-${time}'
     params: {
         storagePurpose: 'msix'
-        storageSolution: 'azureNetappFiles'
+        storageSolution: 'AzureNetappFiles'
         fileShareCustomName: msixFileShareCustomName
         identityServiceProvider: avdIdentityServiceProvider
         dscAgentPackageLocation: varStorageAzureFilesDscAgentPackageLocation
