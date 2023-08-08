@@ -87,7 +87,7 @@ Invoke-WebRequest -Uri $DscPath -OutFile $OutputPath
 Write-Host "Expanding the archive $DscArchive" 
 Expand-Archive -LiteralPath $OutputPath -DestinationPath $Localpath -Force -Verbose
 
-Set-Location -Path $LocalPath
+Set-Location -Path $OutputPath
 
 Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 Install-Module 'PSDscResources' -Force
