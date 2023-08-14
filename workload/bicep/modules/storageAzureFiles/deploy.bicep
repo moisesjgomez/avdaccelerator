@@ -43,6 +43,10 @@ param wrklKvName string
 @sys.description('AVD session host domain join credentials.')
 param domainJoinUserName string
 
+@sys.description('AVD session host domain join credentials.')
+@secure()
+param domainJoinUserPassword string
+
 @sys.description('Azure Files storage account SKU.')
 param storageSku string
 
@@ -95,9 +99,30 @@ param createOuForStorageString string
 @sys.description('Managed Identity Client ID')
 param managedIdentityClientId string
 
+param FslogixSolution string = 'ProfileContainer'
+
+param KerberosEncryption string = 'AES256'
+
+param _artifactsLocation string = 'https://github.com/moisesjgomez/avdaccelerator/tree/ntfs-permissions/workload/scripts/'
+
+param _artifactsLocationSasToken string = ''
+
+param StorageAccountPrefix string = ''
+
+param SecurityPrincipalNames array = []
+
+param storageResourceGroup string = ''
+
+param storageSolution string = 'AzureStorageAccount'
+
+param storageCount int = 1
+
+param storageIndex int = 0
+
 // =========== //
 // Variable declaration //
 // =========== //
+
 var varAzureCloudName = environment().name
 var varStoragePurposeLower = toLower(storagePurpose)
 var varAvdFileShareLogsDiagnostic = [
@@ -106,6 +131,7 @@ var varAvdFileShareLogsDiagnostic = [
 var varAvdFileShareMetricsDiagnostic = [
     'Transaction'
 ]
+
 var varWrklStoragePrivateEndpointName = 'pe-${storageAccountName}-file'
 var vardirectoryServiceOptions = (identityServiceProvider == 'AADDS') ? 'AADDS': (identityServiceProvider == 'AAD') ? 'AADKERB': 'None'
 var varStorageToDomainScriptArgs = '-DscPath ${dscAgentPackageLocation} -StorageAccountName ${storageAccountName} -StorageAccountRG ${storageObjectsRgName} -StoragePurpose ${storagePurpose} -DomainName ${identityDomainName} -IdentityServiceProvider ${identityServiceProvider} -AzureCloudEnvironment ${varAzureCloudName} -SubscriptionId ${workloadSubsId} -DomainAdminUserName ${domainJoinUserName} -CustomOuPath ${storageCustomOuPath} -OUName ${ouStgPath} -CreateNewOU ${createOuForStorageString} -ShareName ${fileShareName} -ClientId ${managedIdentityClientId}'
@@ -188,6 +214,7 @@ module storageAndFile '../../../../carml/1.3.0/Microsoft.Storage/storageAccounts
 //}
 
 // Custom Extension call in on the DSC script to join Azure storage account to domain. 
+/*
 module addShareToDomainScript './.bicep/azureFilesDomainJoin.bicep' = {
     scope: resourceGroup('${workloadSubsId}', '${serviceObjectsRgName}')
     name: 'Add-${storagePurpose}-Storage-Setup-${time}'
@@ -203,6 +230,32 @@ module addShareToDomainScript './.bicep/azureFilesDomainJoin.bicep' = {
         storageAndFile
     ]
 }
+*/
+
+module ntfsPermissions 'ntfsPermissions.bicep' = if (contains(identityServiceProvider, 'ADDS')) {
+  name: 'FslogixNtfsPermissions_${time}'
+  scope: resourceGroup('${workloadSubsId}', '${serviceObjectsRgName}')
+  params: {
+    _artifactsLocation: storageToDomainScriptUri
+    _artifactsLocationSasToken: _artifactsLocationSasToken
+    CommandToExecute: 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId ${managedIdentityClientId} -DomainJoinPassword "${domainJoinUserPassword}" -DomainJoinUserPrincipalName ${domainJoinUserName} -ActiveDirectorySolution ${identityServiceProvider} -Environment ${environment().name} -FslogixSolution ${FslogixSolution} -KerberosEncryptionType ${KerberosEncryption} -StorageAccountName ${storageAccountName} -Netbios ${identityDomainName} -OuPath "${storageCustomOuPath}" -SecurityPrincipalNames "${SecurityPrincipalNames}" -StorageAccountPrefix ${StorageAccountPrefix} -StorageAccountResourceGroupName ${storageObjectsRgName} -StorageCount ${storageCount} -StorageIndex ${storageIndex} -StorageSolution ${storageSolution} -StorageSuffix ${environment().suffixes.storage} -SubscriptionId ${subscription().subscriptionId} -TenantId ${subscription().tenantId}'
+    //DeploymentScriptNamePrefix: DeploymentScriptNamePrefix
+    Location: sessionHostLocation
+    ManagementVmName: managementVmName
+    //TagsDeploymentScripts: TagsDeploymentScripts
+    //TagsVirtualMachines: TagsVirtualMachines
+    Timestamp: time
+    //UserAssignedIdentityResourceId: UserAssignedIdentityResourceId
+  }
+  /*
+  dependsOn: [
+    privateDnsZoneGroups
+    privateEndpoints
+    shares
+  ]
+  */
+}
+
 
 // =========== //
 //   Outputs   //

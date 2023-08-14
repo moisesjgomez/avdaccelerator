@@ -1145,6 +1145,7 @@ module fslogixAzureFilesStorage './modules/storageAzureFiles/deploy.bicep' = if 
         createOuForStorageString: varCreateOuForStorageString
         managedIdentityClientId: varCreateStorageDeployment ? identity.outputs.managedIdentityStorageClientId : ''
         domainJoinUserName: avdDomainJoinUserName
+        domainJoinUserPassword: avdDomainJoinUserPassword //change to keyvault
         wrklKvName: varWrklKvName
         serviceObjectsRgName: varServiceObjectsRgName
         identityDomainName: avdIdentityDomainName
@@ -1188,6 +1189,7 @@ module msixAzureFilesStorage './modules/storageAzureFiles/deploy.bicep' = if (cr
         createOuForStorageString: varCreateOuForStorageString
         managedIdentityClientId: varCreateStorageDeployment ? identity.outputs.managedIdentityStorageClientId : ''
         domainJoinUserName: avdDomainJoinUserName
+        domainJoinUserPassword: avdDomainJoinUserPassword //change to keyvault
         wrklKvName: varWrklKvName
         serviceObjectsRgName: varServiceObjectsRgName
         identityDomainName: avdIdentityDomainName
