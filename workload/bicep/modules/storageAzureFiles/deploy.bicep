@@ -119,6 +119,8 @@ param storageCount int = 1
 
 param storageIndex int = 0
 
+param ActiveDirectorySolution string = 'ActiveDirectoryDomainServices'
+
 // =========== //
 // Variable declaration //
 // =========== //
@@ -236,9 +238,9 @@ module ntfsPermissions 'ntfsPermissions.bicep' = if (contains(identityServicePro
   name: 'FslogixNtfsPermissions_${time}'
   scope: resourceGroup('${workloadSubsId}', '${serviceObjectsRgName}')
   params: {
-    _artifactsLocation: storageToDomainScriptUri
+    _artifactsLocation: _artifactsLocation //storageToDomainScriptUri
     _artifactsLocationSasToken: _artifactsLocationSasToken
-    CommandToExecute: 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId ${managedIdentityClientId} -DomainJoinPassword "${domainJoinUserPassword}" -DomainJoinUserPrincipalName ${domainJoinUserName} -ActiveDirectorySolution ${identityServiceProvider} -Environment ${environment().name} -FslogixSolution ${FslogixSolution} -KerberosEncryptionType ${KerberosEncryption} -StorageAccountName ${storageAccountName} -Netbios ${identityDomainName} -OuPath "${storageCustomOuPath}" -SecurityPrincipalNames "${SecurityPrincipalNames}" -StorageAccountPrefix ${StorageAccountPrefix} -StorageAccountResourceGroupName ${storageObjectsRgName} -StorageCount ${storageCount} -StorageIndex ${storageIndex} -StorageSolution ${storageSolution} -StorageSuffix ${environment().suffixes.storage} -SubscriptionId ${subscription().subscriptionId} -TenantId ${subscription().tenantId}'
+    CommandToExecute: 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId ${managedIdentityClientId} -DomainJoinPassword "${domainJoinUserPassword}" -DomainJoinUserPrincipalName ${domainJoinUserName} -ActiveDirectorySolution '${ActiveDirectorySolution}' -Environment ${environment().name} -FslogixSolution ${FslogixSolution} -KerberosEncryptionType ${KerberosEncryption} -StorageAccountName ${storageAccountName} -Netbios ${identityDomainName} -OuPath "${storageCustomOuPath}" -SecurityPrincipalNames "${SecurityPrincipalNames}" -StorageAccountPrefix ${StorageAccountPrefix} -StorageAccountResourceGroupName ${storageObjectsRgName} -StorageCount ${storageCount} -StorageIndex ${storageIndex} -StorageSolution ${storageSolution} -StorageSuffix ${environment().suffixes.storage} -SubscriptionId ${subscription().subscriptionId} -TenantId ${subscription().tenantId}' //change active directory solution to id service provider
     //DeploymentScriptNamePrefix: DeploymentScriptNamePrefix
     Location: sessionHostLocation
     ManagementVmName: managementVmName
