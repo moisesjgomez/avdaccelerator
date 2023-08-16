@@ -62,7 +62,10 @@ param
     [String]$SubscriptionId,
 
     [Parameter(Mandatory=$false)]
-    [String]$TenantId
+    [String]$TenantId,
+
+    [Parameter(Mandatory=$false)]
+    [String]$StorageAccountFullName
 )
 
 function Write-Log
@@ -189,7 +192,8 @@ try
                 $FileServer = '\\' + $SmbServerName + '.' + $Domain.DNSRoot
             }
             'AzureStorageAccount' {
-                $StorageAccountName = $StorageAccountPrefix + ($i + $StorageIndex).ToString().PadLeft(2,'0')
+                //$StorageAccountName = $StorageAccountPrefix + ($i + $StorageIndex).ToString().PadLeft(2,'0')
+                $StorageAccountName = $StorageAccountFullName
                 $FileServer = '\\' + $StorageAccountName + $FilesSuffix
 
                 # Connects to Azure using a User Assigned Managed Identity
