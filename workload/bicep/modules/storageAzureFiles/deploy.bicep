@@ -235,12 +235,27 @@ module addShareToDomainScript './.bicep/azureFilesDomainJoin.bicep' = {
 */
 
 module ntfsPermissions 'ntfsPermissions.bicep' = if (contains(identityServiceProvider, 'ADDS')) {
+    name: 'FslogixNtfsPermissions_${time}'
+    scope: resourceGroup(workloadSubsId, serviceObjectsRgName)
+    params: {
+      _artifactsLocation: _artifactsLocation
+      _artifactsLocationSasToken: _artifactsLocationSasToken
+      CommandToExecute: 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId ${managedIdentityClientId} -DomainJoinPassword "${domainJoinUserPassword}" -DomainJoinUserPrincipalName ${domainJoinUserName} -ActiveDirectorySolution "${ActiveDirectorySolution}" -Environment ${environment().name} -FslogixSolution ${FslogixSolution} -KerberosEncryptionType ${KerberosEncryption} -StorageAccountName ${storageAccountName} -Netbios ${identityDomainName} -OuPath "${storageCustomOuPath}" -SecurityPrincipalNames "${SecurityPrincipalNames}" -StorageAccountPrefix ${StorageAccountPrefix} -StorageAccountResourceGroupName ${storageObjectsRgName} -StorageCount ${storageCount} -StorageIndex ${storageIndex} -StorageSolution ${storageSolution} -StorageSuffix ${environment().suffixes.storage} -SubscriptionId ${subscription().subscriptionId} -TenantId ${subscription().tenantId}'
+      Location: sessionHostLocation
+      ManagementVmName: managementVmName
+      Timestamp: time
+    }
+    //...
+  }
+
+/*
+module ntfsPermissions 'ntfsPermissions.bicep' = if (contains(identityServiceProvider, 'ADDS')) {
   name: 'FslogixNtfsPermissions_${time}'
   scope: resourceGroup('${workloadSubsId}', '${serviceObjectsRgName}')
   params: {
     _artifactsLocation: _artifactsLocation //storageToDomainScriptUri
     _artifactsLocationSasToken: _artifactsLocationSasToken
-    CommandToExecute: 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId ${managedIdentityClientId} -DomainJoinPassword "${domainJoinUserPassword}" -DomainJoinUserPrincipalName ${domainJoinUserName} -ActiveDirectorySolution '${ActiveDirectorySolution}' -Environment ${environment().name} -FslogixSolution ${FslogixSolution} -KerberosEncryptionType ${KerberosEncryption} -StorageAccountName ${storageAccountName} -Netbios ${identityDomainName} -OuPath "${storageCustomOuPath}" -SecurityPrincipalNames "${SecurityPrincipalNames}" -StorageAccountPrefix ${StorageAccountPrefix} -StorageAccountResourceGroupName ${storageObjectsRgName} -StorageCount ${storageCount} -StorageIndex ${storageIndex} -StorageSolution ${storageSolution} -StorageSuffix ${environment().suffixes.storage} -SubscriptionId ${subscription().subscriptionId} -TenantId ${subscription().tenantId}' //change active directory solution to id service provider
+    CommandToExecute: 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId ${managedIdentityClientId} -DomainJoinPassword "${domainJoinUserPassword}" -DomainJoinUserPrincipalName ${domainJoinUserName} -ActiveDirectorySolution "${ActiveDirectorySolution}" -Environment ${environment().name} -FslogixSolution ${FslogixSolution} -KerberosEncryptionType ${KerberosEncryption} -StorageAccountName ${storageAccountName} -Netbios ${identityDomainName} -OuPath "${storageCustomOuPath}" -SecurityPrincipalNames "${SecurityPrincipalNames}" -StorageAccountPrefix ${StorageAccountPrefix} -StorageAccountResourceGroupName ${storageObjectsRgName} -StorageCount ${storageCount} -StorageIndex ${storageIndex} -StorageSolution ${storageSolution} -StorageSuffix ${environment().suffixes.storage} -SubscriptionId ${subscription().subscriptionId} -TenantId ${subscription().tenantId}' //change active directory solution to id service provider
     //DeploymentScriptNamePrefix: DeploymentScriptNamePrefix
     Location: sessionHostLocation
     ManagementVmName: managementVmName
@@ -249,14 +264,14 @@ module ntfsPermissions 'ntfsPermissions.bicep' = if (contains(identityServicePro
     Timestamp: time
     //UserAssignedIdentityResourceId: UserAssignedIdentityResourceId
   }
-  /*
+  
   dependsOn: [
     privateDnsZoneGroups
     privateEndpoints
     shares
   ]
-  */
-}
+  
+}*/
 
 
 // =========== //
