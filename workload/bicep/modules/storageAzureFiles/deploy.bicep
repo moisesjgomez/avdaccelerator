@@ -83,7 +83,9 @@ param time string = utcNow()
 @sys.description('Sets purpose of the storage account.')
 param storagePurpose string
 
-//parameters for domain join
+@sys.description('ActiveDirectorySolution. ')
+param ActiveDirectorySolution string = 'ActiveDirectoryDomainServices'
+
 @sys.description('Sets location of DSC Agent.')
 param dscAgentPackageLocation string
 
@@ -99,19 +101,16 @@ param createOuForStorageString string
 @sys.description('Managed Identity Client ID')
 param managedIdentityClientId string
 
-param FslogixSolution string = 'ProfileContainer'
-
+@sys.description('Kerberos Encryption. Default is AES256.')
 param KerberosEncryption string = 'AES256'
 
+@sys.description('Location of script. Default is located in workload/scripts')
 param _artifactsLocation string = 'https://github.com/moisesjgomez/avdaccelerator/tree/ntfs-permissions/workload/scripts/'
 
+@description('SAS Token to access script.')
 param _artifactsLocationSasToken string = ''
 
-param StorageAccountPrefix string = ''
-
-param SecurityPrincipalNames array = []
-
-param storageResourceGroup string = ''
+param SecurityPrincipalNames string = ''
 
 param storageSolution string = 'AzureStorageAccount'
 
@@ -119,9 +118,7 @@ param storageCount int = 1
 
 param storageIndex int = 0
 
-param ActiveDirectorySolution string = 'ActiveDirectoryDomainServices'
-
-param netBios string = 'mngenvmcap88523'
+param netBios string = ''
 
 // =========== //
 // Variable declaration //
@@ -242,7 +239,7 @@ module ntfsPermissions 'ntfsPermissions.bicep' = if (contains(identityServicePro
     params: {
       _artifactsLocation: _artifactsLocation
       _artifactsLocationSasToken: _artifactsLocationSasToken
-      CommandToExecute: 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId ${managedIdentityClientId} -DomainJoinPassword "${domainJoinUserPassword}" -DomainJoinUserPrincipalName ${domainJoinUserName} -ActiveDirectorySolution "${ActiveDirectorySolution}" -Environment ${environment().name} -FslogixSolution ${FslogixSolution} -KerberosEncryptionType ${KerberosEncryption} -StorageAccountFullName ${storageAccountName} -StorageAccountPrefix ${StorageAccountPrefix} -Netbios ${netBios} -OuPath "${storageCustomOuPath}" -SecurityPrincipalNames "${SecurityPrincipalNames}" -StorageAccountPrefix ${StorageAccountPrefix} -StorageAccountResourceGroupName ${storageObjectsRgName} -StorageCount ${storageCount} -StorageIndex ${storageIndex} -StorageSolution ${storageSolution} -StorageSuffix ${environment().suffixes.storage} -SubscriptionId ${subscription().subscriptionId} -TenantId ${subscription().tenantId}'
+      CommandToExecute: 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId ${managedIdentityClientId} -DomainJoinPassword "${domainJoinUserPassword}" -DomainJoinUserPrincipalName ${domainJoinUserName} -ActiveDirectorySolution "${ActiveDirectorySolution}" -Environment ${environment().name} -KerberosEncryptionType ${KerberosEncryption} -StorageAccountFullName ${storageAccountName} -FileShareName "${fileShareName}" -Netbios ${netBios} -OuPath "${storageCustomOuPath}" -SecurityPrincipalNames "${SecurityPrincipalNames}" -StorageAccountResourceGroupName ${storageObjectsRgName} -StorageCount ${storageCount} -StorageIndex ${storageIndex} -StorageSolution ${storageSolution} -StorageSuffix ${environment().suffixes.storage} -SubscriptionId ${subscription().subscriptionId} -TenantId ${subscription().tenantId}'
       Location: sessionHostLocation
       ManagementVmName: managementVmName
       Timestamp: time

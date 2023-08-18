@@ -23,6 +23,12 @@ param
     [String]$KerberosEncryptionType,
 
     [Parameter(Mandatory=$false)]
+    [String]$StorageAccountFullName,
+
+    [Parameter(Mandatory=$false)]
+    [String]$FileShareName,
+
+    [Parameter(Mandatory=$false)]
     [String]$Netbios,
 
     [Parameter(Mandatory=$false)]
@@ -33,9 +39,6 @@ param
 
     [Parameter(Mandatory=$false)]
     [String]$SmbServerLocation,
-
-    [Parameter(Mandatory=$false)]
-    [String]$StorageAccountPrefix,
 
     [Parameter(Mandatory=$false)]
     [String]$StorageAccountResourceGroupName,
@@ -56,14 +59,8 @@ param
     [String]$SubscriptionId,
 
     [Parameter(Mandatory=$false)]
-    [String]$TenantId,
-
-    [Parameter(Mandatory=$false)]
-    [String]$StorageAccountFullName,
-
-    [Parameter(Mandatory=$false)]
-    [String]$FileShareName
-)
+    [String]$TenantId
+   )
 
 function Write-Log
 {
@@ -142,7 +139,7 @@ try
     Write-Log -Message "Security Principal Names:" -Type 'INFO'
     $SecurityPrincipalNames | Add-Content -Path 'C:\cse.txt' -Force
 
-    #Set share name
+   #Set share name
     $Share = $Filesharename
 
     if($StorageSolution -eq 'AzureNetAppFiles' -or ($StorageSolution -eq 'AzureStorageAccount' -and $ActiveDirectorySolution -eq 'ActiveDirectoryDomainServices'))
@@ -170,7 +167,7 @@ try
     for($i = 0; $i -lt $StorageCount; $i++)
     {
         # Determine Principal for assignment
-        $SecurityPrincipalName = $SecurityPrincipalNames[$i]
+        $SecurityPrincipalName = $SecurityPrincipalNames
         $Group = $Netbios + '\' + $SecurityPrincipalName
         Write-Log -Message "Group for NTFS Permissions = $Group" -Type 'INFO'
 
