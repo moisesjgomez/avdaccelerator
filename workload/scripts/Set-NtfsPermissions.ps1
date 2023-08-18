@@ -65,7 +65,10 @@ param
     [String]$TenantId,
 
     [Parameter(Mandatory=$false)]
-    [String]$StorageAccountFullName
+    [String]$StorageAccountFullName,
+
+    [Parameter(Mandatory=$false)]
+    [String]$FileShareName
 )
 
 function Write-Log
@@ -141,18 +144,21 @@ try
     #  Variables
     ##############################################################
     # Convert Security Principal Names from a JSON array to a PowerShell array
-    [array]$SecurityPrincipalNames = $SecurityPrincipalNames.Replace("'",'"') | ConvertFrom-Json
+    #[array]$SecurityPrincipalNames = $SecurityPrincipalNames.Replace("'",'"') | ConvertFrom-Json
     Write-Log -Message "Security Principal Names:" -Type 'INFO'
     $SecurityPrincipalNames | Add-Content -Path 'C:\cse.txt' -Force
 
     # Selects the appropraite share names based on the FSlogixSolution param from the deployment
-    $Shares = switch($FslogixSolution)
+    <#$Shares = switch($FslogixSolution)
     {
         'CloudCacheProfileContainer' {@('profile-containers')}
         'CloudCacheProfileOfficeContainer' {@('office-containers','profile-containers')}
-        'ProfileContainer' {@('profile-containers')}
+        'ProfileContainer' {@('fslogix-pc-nf59-dev-use-001')}
         'ProfileOfficeContainer' {@('office-containers','profile-containers')}
     }
+    #>
+
+    $Share = $Filesharename
 
     if($StorageSolution -eq 'AzureNetAppFiles' -or ($StorageSolution -eq 'AzureStorageAccount' -and $ActiveDirectorySolution -eq 'ActiveDirectoryDomainServices'))
     {
@@ -192,7 +198,7 @@ try
                 $FileServer = '\\' + $SmbServerName + '.' + $Domain.DNSRoot
             }
             'AzureStorageAccount' {
-                //$StorageAccountName = $StorageAccountPrefix + ($i + $StorageIndex).ToString().PadLeft(2,'0')
+                #$StorageAccountName = $StorageAccountPrefix + ($i + $StorageIndex).ToString().PadLeft(2,'0')
                 $StorageAccountName = $StorageAccountFullName
                 $FileServer = '\\' + $StorageAccountName + $FilesSuffix
 
@@ -289,9 +295,6 @@ try
                 Write-Log -Message "Disconnection to Azure succeeded" -Type 'INFO'
             }
         }
-        
-        foreach($Share in $Shares)
-        {
             # Mount file share
             $FileShare = $FileServer + '\' + $Share
             New-PSDrive -Name 'Z' -PSProvider 'FileSystem' -Root $FileShare -Credential $Credential
@@ -316,7 +319,6 @@ try
             Remove-PSDrive -Name 'Z' -PSProvider 'FileSystem' -Force
             Start-Sleep -Seconds 5
             Write-Log -Message "Unmounting the Azure file share, $FileShare, succeeded" -Type 'INFO'
-        }
     }
 }
 catch {
