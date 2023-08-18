@@ -18,9 +18,6 @@ param
     [Parameter(Mandatory=$false)]
     [String]$Environment,
 
-    [Parameter(Mandatory)]
-    [String]$FslogixSolution,
-
     [Parameter(Mandatory=$false)]
     [ValidateSet("AES256","RC4")]
     [String]$KerberosEncryptionType,
@@ -30,9 +27,6 @@ param
 
     [Parameter(Mandatory=$false)]
     [String]$OuPath,
-
-    [Parameter(Mandatory=$false)]
-    [String]$ResourceNameSuffix,
 
     [Parameter(Mandatory)]
     [String]$SecurityPrincipalNames,
@@ -148,16 +142,7 @@ try
     Write-Log -Message "Security Principal Names:" -Type 'INFO'
     $SecurityPrincipalNames | Add-Content -Path 'C:\cse.txt' -Force
 
-    # Selects the appropraite share names based on the FSlogixSolution param from the deployment
-    <#$Shares = switch($FslogixSolution)
-    {
-        'CloudCacheProfileContainer' {@('profile-containers')}
-        'CloudCacheProfileOfficeContainer' {@('office-containers','profile-containers')}
-        'ProfileContainer' {@('fslogix-pc-nf59-dev-use-001')}
-        'ProfileOfficeContainer' {@('office-containers','profile-containers')}
-    }
-    #>
-
+    #Set share name
     $Share = $Filesharename
 
     if($StorageSolution -eq 'AzureNetAppFiles' -or ($StorageSolution -eq 'AzureStorageAccount' -and $ActiveDirectorySolution -eq 'ActiveDirectoryDomainServices'))
@@ -198,7 +183,6 @@ try
                 $FileServer = '\\' + $SmbServerName + '.' + $Domain.DNSRoot
             }
             'AzureStorageAccount' {
-                #$StorageAccountName = $StorageAccountPrefix + ($i + $StorageIndex).ToString().PadLeft(2,'0')
                 $StorageAccountName = $StorageAccountFullName
                 $FileServer = '\\' + $StorageAccountName + $FilesSuffix
 
