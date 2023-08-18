@@ -66,8 +66,12 @@ param avdApplicationGroupIdentitiesIds array = []
 @sys.description('Optional, Identity type to grant RBAC role to access AVD application group. (Default: Group)')
 param avdApplicationGroupIdentityType string = 'Group'
 
+param securityPrincipalNames string = ''
+
 @sys.description('AD domain name.')
 param avdIdentityDomainName string
+
+param netBios string = ''
 
 @sys.description('AD domain GUID. (Default: "")')
 param identityDomainGuid string = ''
@@ -164,14 +168,36 @@ param vNetworkGatewayOnHub bool = false
 @sys.description('Deploy Fslogix setup. (Default: true)')
 param createAvdFslogixDeployment bool = true
 
+@allowed([
+    'AzureStorageAccount'
+    'AzureNetappFiles'
+])
+@sys.description ('Fslogix Storage Solution. Default is Azure Storage Account.')
+param fslogixStorageSolution string = 'AzureStorageAccount'
+
 @sys.description('Deploy MSIX App Attach setup. (Default: false)')
 param createMsixDeployment bool = false
+
+@allowed([
+    'AzureStorageAccount'
+    'AzureNetappFiles'
+])
+@sys.description ('App attach Storage Solution. Default is Azure Storage Account.')
+param appAttachStorageSolution string = 'AzureStorageAccount'
+
 
 @sys.description('Fslogix file share size. (Default: 1)')
 param fslogixFileShareQuotaSize int = 1
 
 @sys.description('MSIX file share size. (Default: 1)')
 param msixFileShareQuotaSize int = 1
+
+@allowed([
+    'AES256'
+    'RC4'
+])
+@sys.description('Kerberos Encryption. Default is AES256.')
+param kerberosEncryption string = 'AES256'
 
 @sys.description('Deploy new session hosts. (Default: true)')
 param avdDeploySessionHosts bool = true
@@ -545,7 +571,7 @@ var varZtKvPrivateEndpointName = 'pe-${varZtKvName}-vault'
 //
 var varFsLogixScriptArguments = (avdIdentityServiceProvider == 'AAD') ? '-volumeshare ${varFslogixSharePath} -storageAccountName ${varFslogixStorageName} -identityDomainName ${avdIdentityDomainName}' : '-volumeshare ${varFslogixSharePath}'
 var varFslogixSharePath = '\\\\${varFslogixStorageName}.file.${environment().suffixes.storage}\\${varFslogixFileShareName}'
-var varBaseScriptUri = 'https://raw.githubusercontent.com/Azure/avdaccelerator/main/workload/'
+var varBaseScriptUri = 'https://raw.githubusercontent.com/moisesjgomez/avdaccelerator/set-ntfspermissions/workload/'
 var varFslogixScriptUri = (avdIdentityServiceProvider == 'AAD') ? '${varBaseScriptUri}scripts/Set-FSLogixRegKeysAAD.ps1' : '${varBaseScriptUri}scripts/Set-FSLogixRegKeys.ps1'
 var varFsLogixScript = (avdIdentityServiceProvider == 'AAD') ? './Set-FSLogixRegKeysAad.ps1' : './Set-FSLogixRegKeys.ps1'
 //var varCompRgDeploCleanScript = './cleanUpRgDeployments.ps1'
@@ -723,6 +749,7 @@ var varMarketPlaceGalleryWindows = {
 var varStorageAzureFilesDscAgentPackageLocation = 'https://github.com/Azure/avdaccelerator/raw/main/workload/scripts/DSCStorageScripts.zip'
 //var varTempResourcesCleanUpDscAgentPackageLocation = 'https://github.com/Azure/avdaccelerator/raw/main/workload/scripts/postDeploymentTempResourcesCleanUp.zip'
 var varStorageToDomainScriptUri = '${varBaseScriptUri}scripts/Manual-DSC-Storage-Scripts.ps1'
+var varStorageSetupScriptUri = '${varBaseScriptUri}scripts/Set-NTFSPermissions.ps1'
 //var varPostDeploymentTempResuorcesCleanUpScriptUri = '${varBaseScriptUri}scripts/postDeploymentTempResuorcesCleanUp.ps1'
 var varStorageToDomainScript = './Manual-DSC-Storage-Scripts.ps1'
 //var varPostDeploymentTempResuorcesCleanUpScript = './PostDeploymentTempResuorcesCleanUp.ps1'
@@ -1129,13 +1156,17 @@ module fslogixAzureFilesStorage './modules/storageAzureFiles/deploy.bicep' = if 
     name: 'Storage-FSLogix-${time}'
     params: {
         storagePurpose: 'fslogix'
+        storageSolution: fslogixStorageSolution
         fileShareName: varFslogixFileShareName
         fileShareMultichannel: (fslogixStoragePerformance == 'Premium') ? true : false
         storageSku: varFslogixStorageSku
         fileShareQuotaSize: fslogixFileShareQuotaSize
         storageAccountName: varFslogixStorageName
-        storageToDomainScript: varStorageToDomainScript
-        storageToDomainScriptUri: varStorageToDomainScriptUri
+        securityPrincipalNames: securityPrincipalNames
+        netBios: netBios
+        KerberosEncryption: kerberosEncryption
+        //storageToDomainScript: varStorageToDomainScript
+        //storageToDomainScriptUri: varStorageToDomainScriptUri
         identityServiceProvider: avdIdentityServiceProvider
         dscAgentPackageLocation: varStorageAzureFilesDscAgentPackageLocation
         storageCustomOuPath: varStorageCustomOuPath
@@ -1173,13 +1204,17 @@ module msixAzureFilesStorage './modules/storageAzureFiles/deploy.bicep' = if (cr
     name: 'Storage-MSIX-${time}'
     params: {
         storagePurpose: 'msix'
+        storageSolution: appAttachStorageSolution
         fileShareName: varMsixFileShareName
         fileShareMultichannel: (msixStoragePerformance == 'Premium') ? true : false
         storageSku: varMsixStorageSku
         fileShareQuotaSize: msixFileShareQuotaSize
         storageAccountName: varMsixStorageName
-        storageToDomainScript: varStorageToDomainScript
-        storageToDomainScriptUri: varStorageToDomainScriptUri
+        securityPrincipalNames: securityPrincipalNames
+        netBios: netBios
+        KerberosEncryption: kerberosEncryption
+        //storageToDomainScript: varStorageToDomainScript
+        //storageToDomainScriptUri: varStorageToDomainScriptUri
         identityServiceProvider: avdIdentityServiceProvider
         dscAgentPackageLocation: varStorageAzureFilesDscAgentPackageLocation
         storageCustomOuPath: varStorageCustomOuPath

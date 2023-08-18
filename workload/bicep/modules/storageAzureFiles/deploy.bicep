@@ -56,11 +56,11 @@ param fileShareQuotaSize int
 @sys.description('Use Azure private DNS zones for private endpoints.')
 param vnetPrivateDnsZoneFilesId string
 
-@sys.description('Script name for adding storage account to Active Directory.')
-param storageToDomainScript string
+//@sys.description('Script name for adding storage account to Active Directory.')
+//param storageToDomainScript string
 
-@sys.description('URI for the script for adding the storage account to Active Directory.')
-param storageToDomainScriptUri string
+//@sys.description('URI for the script for adding the storage account to Active Directory.')
+//param storageToDomainScriptUri string
 
 @sys.description('Tags to be applied to resources')
 param tags object
@@ -102,7 +102,7 @@ param createOuForStorageString string
 param managedIdentityClientId string
 
 @sys.description('Kerberos Encryption. Default is AES256.')
-param KerberosEncryption string = 'AES256'
+param KerberosEncryption string 
 
 @sys.description('Location of script. Default is located in workload/scripts')
 param _artifactsLocation string = 'https://github.com/moisesjgomez/avdaccelerator/tree/ntfs-permissions/workload/scripts/'
@@ -110,7 +110,7 @@ param _artifactsLocation string = 'https://github.com/moisesjgomez/avdaccelerato
 @description('SAS Token to access script.')
 param _artifactsLocationSasToken string = ''
 
-param SecurityPrincipalNames string = ''
+param securityPrincipalNames string = ''
 
 param storageSolution string = 'AzureStorageAccount'
 
@@ -135,7 +135,7 @@ var varAvdFileShareMetricsDiagnostic = [
 
 var varWrklStoragePrivateEndpointName = 'pe-${storageAccountName}-file'
 var vardirectoryServiceOptions = (identityServiceProvider == 'AADDS') ? 'AADDS': (identityServiceProvider == 'AAD') ? 'AADKERB': 'None'
-var varStorageToDomainScriptArgs = '-DscPath ${dscAgentPackageLocation} -StorageAccountName ${storageAccountName} -StorageAccountRG ${storageObjectsRgName} -StoragePurpose ${storagePurpose} -DomainName ${identityDomainName} -IdentityServiceProvider ${identityServiceProvider} -AzureCloudEnvironment ${varAzureCloudName} -SubscriptionId ${workloadSubsId} -DomainAdminUserName ${domainJoinUserName} -CustomOuPath ${storageCustomOuPath} -OUName ${ouStgPath} -CreateNewOU ${createOuForStorageString} -ShareName ${fileShareName} -ClientId ${managedIdentityClientId}'
+//var varStorageToDomainScriptArgs = '-DscPath ${dscAgentPackageLocation} -StorageAccountName ${storageAccountName} -StorageAccountRG ${storageObjectsRgName} -StoragePurpose ${storagePurpose} -DomainName ${identityDomainName} -IdentityServiceProvider ${identityServiceProvider} -AzureCloudEnvironment ${varAzureCloudName} -SubscriptionId ${workloadSubsId} -DomainAdminUserName ${domainJoinUserName} -CustomOuPath ${storageCustomOuPath} -OUName ${ouStgPath} -CreateNewOU ${createOuForStorageString} -ShareName ${fileShareName} -ClientId ${managedIdentityClientId}'
 // =========== //
 // Deployments //
 // =========== //
@@ -239,7 +239,7 @@ module ntfsPermissions 'ntfsPermissions.bicep' = if (contains(identityServicePro
     params: {
       _artifactsLocation: _artifactsLocation
       _artifactsLocationSasToken: _artifactsLocationSasToken
-      CommandToExecute: 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId ${managedIdentityClientId} -DomainJoinPassword "${domainJoinUserPassword}" -DomainJoinUserPrincipalName ${domainJoinUserName} -ActiveDirectorySolution "${ActiveDirectorySolution}" -Environment ${environment().name} -KerberosEncryptionType ${KerberosEncryption} -StorageAccountFullName ${storageAccountName} -FileShareName "${fileShareName}" -Netbios ${netBios} -OuPath "${storageCustomOuPath}" -SecurityPrincipalNames "${SecurityPrincipalNames}" -StorageAccountResourceGroupName ${storageObjectsRgName} -StorageCount ${storageCount} -StorageIndex ${storageIndex} -StorageSolution ${storageSolution} -StorageSuffix ${environment().suffixes.storage} -SubscriptionId ${subscription().subscriptionId} -TenantId ${subscription().tenantId}'
+      CommandToExecute: 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId ${managedIdentityClientId} -DomainJoinPassword "${domainJoinUserPassword}" -DomainJoinUserPrincipalName ${domainJoinUserName} -ActiveDirectorySolution "${ActiveDirectorySolution}" -Environment ${environment().name} -KerberosEncryptionType ${KerberosEncryption} -StorageAccountFullName ${storageAccountName} -FileShareName "${fileShareName}" -Netbios ${netBios} -OuPath "${storageCustomOuPath}" -securityPrincipalNames "${securityPrincipalNames}" -StorageAccountResourceGroupName ${storageObjectsRgName} -StorageCount ${storageCount} -StorageIndex ${storageIndex} -StorageSolution ${storageSolution} -StorageSuffix ${environment().suffixes.storage} -SubscriptionId ${subscription().subscriptionId} -TenantId ${subscription().tenantId}'
       Location: sessionHostLocation
       ManagementVmName: managementVmName
       Timestamp: time

@@ -62,6 +62,10 @@ var varStorageSmbShareContributorRole = {
   id: '0c867c2a-1d8c-454a-a3db-ab2ea1bdc8bb'
   name: 'Storage File Data SMB Share Contributor'
 }
+var varDesktopVirtualizationVirtualMachineContributorRole = {
+  id:'	a959dbd1-f747-45e3-8ba6-dd80f235f97c'
+  name: 'Desktop Virtualization Virtual Machine Contributor'
+}
 var varDesktopVirtualizationPowerOnContributorRole = {
   id: '489581de-a3bd-480d-9518-53dea7416b33'
   name: 'Desktop Virtualization Power On Contributor'
@@ -187,6 +191,16 @@ module storageSmbShareContributorRoleAssign '../../../../carml/1.3.0/Microsoft.A
   scope: resourceGroup('${subscriptionId}', '${storageObjectsRgName}')
   params: {
     roleDefinitionIdOrName: '/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/${varStorageSmbShareContributorRole.id}'
+    principalId: appGroupIdentitiesId
+  }
+}]
+
+//Management VM Desktop Virtualization Virtual Machine Contributor Role assignment
+module DesktopVirtualizationVirtualMachineContributorRoleAssign '../../../../carml/1.3.0/Microsoft.Authorization/roleAssignments/resourceGroup/deploy.bicep' = [for appGroupIdentitiesId in appGroupIdentitiesIds: if (createStorageDeployment && (identityServiceProvider == 'AAD') && (!empty(appGroupIdentitiesIds))) {
+  name: 'Stora-VMCont-RolAssign-${take('${appGroupIdentitiesId}', 6)}-${time}'
+  scope: resourceGroup('${subscriptionId}', '${serviceObjectsRgName}')
+  params: {
+    roleDefinitionIdOrName: '/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/${varDesktopVirtualizationVirtualMachineContributorRole.id}'
     principalId: appGroupIdentitiesId
   }
 }]
