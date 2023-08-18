@@ -66,12 +66,12 @@ param avdApplicationGroupIdentitiesIds array = []
 @sys.description('Optional, Identity type to grant RBAC role to access AVD application group. (Default: Group)')
 param avdApplicationGroupIdentityType string = 'Group'
 
-param securityPrincipalNames string = ''
+param securityPrincipalNames string = 'myavdusers' //testing
 
 @sys.description('AD domain name.')
 param avdIdentityDomainName string
 
-param netBios string = ''
+param netBios string = 'mngenvmcap88523' //testing
 
 @sys.description('AD domain GUID. (Default: "")')
 param identityDomainGuid string = ''
