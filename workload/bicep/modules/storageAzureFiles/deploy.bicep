@@ -110,9 +110,9 @@ param _artifactsLocation string = 'https://github.com/moisesjgomez/avdaccelerato
 @description('SAS Token to access script.')
 param _artifactsLocationSasToken string = ''
 
-param securityPrincipalNames string = ''
+param securityPrincipalNames string 
 
-param storageSolution string = 'AzureStorageAccount'
+param storageSolution string 
 
 param storageCount int = 1
 
@@ -239,7 +239,7 @@ module ntfsPermissions 'ntfsPermissions.bicep' = if (contains(identityServicePro
     params: {
       _artifactsLocation: _artifactsLocation
       _artifactsLocationSasToken: _artifactsLocationSasToken
-      CommandToExecute: 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId ${managedIdentityClientId} -DomainJoinPassword "${domainJoinUserPassword}" -DomainJoinUserPrincipalName ${domainJoinUserName} -ActiveDirectorySolution "${ActiveDirectorySolution}" -Environment ${environment().name} -KerberosEncryptionType ${KerberosEncryption} -StorageAccountFullName ${storageAccountName} -FileShareName "${fileShareName}" -Netbios ${netBios} -OuPath "${storageCustomOuPath}" -securityPrincipalNames "${securityPrincipalNames}" -StorageAccountResourceGroupName ${storageObjectsRgName} -StorageCount ${storageCount} -StorageIndex ${storageIndex} -StorageSolution ${storageSolution} -StorageSuffix ${environment().suffixes.storage} -SubscriptionId ${subscription().subscriptionId} -TenantId ${subscription().tenantId}'
+      CommandToExecute: 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId ${managedIdentityClientId} -DomainJoinPassword "${domainJoinUserPassword}" -DomainJoinUserPrincipalName ${domainJoinUserName} -ActiveDirectorySolution "${ActiveDirectorySolution}" -Environment ${environment().name} -KerberosEncryptionType ${KerberosEncryption} -StorageAccountFullName ${storageAccountName} -FileShareName "${fileShareName}" -Netbios ${netBios} -OuPath "${ouStgPath}" -SecurityPrincipalNames "${securityPrincipalNames}" -StorageAccountResourceGroupName ${storageObjectsRgName} -StorageCount ${storageCount} -StorageIndex ${storageIndex} -StorageSolution ${storageSolution} -StorageSuffix ${environment().suffixes.storage} -SubscriptionId ${subscription().subscriptionId} -TenantId ${subscription().tenantId}'
       Location: sessionHostLocation
       ManagementVmName: managementVmName
       Timestamp: time
