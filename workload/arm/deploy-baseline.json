@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.20.4.51522",
-      "templateHash": "844608885345243805"
+      "templateHash": "14133596970882382271"
     },
     "name": "AVD Accelerator - Baseline Deployment",
     "description": "AVD Accelerator - Deployment Baseline"
@@ -35080,7 +35080,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.20.4.51522",
-              "templateHash": "8421855814376641161"
+              "templateHash": "16414992328187639528"
             }
           },
           "parameters": {
@@ -35287,12 +35287,10 @@
               }
             },
             "securityPrincipalNames": {
-              "type": "string",
-              "defaultValue": ""
+              "type": "string"
             },
             "storageSolution": {
-              "type": "string",
-              "defaultValue": "AzureStorageAccount"
+              "type": "string"
             },
             "storageCount": {
               "type": "int",
@@ -39177,7 +39175,7 @@
                     "value": "[parameters('_artifactsLocationSasToken')]"
                   },
                   "CommandToExecute": {
-                    "value": "[format('powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId {0} -DomainJoinPassword \"{1}\" -DomainJoinUserPrincipalName {2} -ActiveDirectorySolution \"{3}\" -Environment {4} -KerberosEncryptionType {5} -StorageAccountFullName {6} -FileShareName \"{7}\" -Netbios {8} -OuPath \"{9}\" -securityPrincipalNames \"{10}\" -StorageAccountResourceGroupName {11} -StorageCount {12} -StorageIndex {13} -StorageSolution {14} -StorageSuffix {15} -SubscriptionId {16} -TenantId {17}', parameters('managedIdentityClientId'), parameters('domainJoinUserPassword'), parameters('domainJoinUserName'), parameters('ActiveDirectorySolution'), environment().name, parameters('KerberosEncryption'), parameters('storageAccountName'), parameters('fileShareName'), parameters('netBios'), parameters('storageCustomOuPath'), parameters('securityPrincipalNames'), parameters('storageObjectsRgName'), parameters('storageCount'), parameters('storageIndex'), parameters('storageSolution'), environment().suffixes.storage, subscription().subscriptionId, subscription().tenantId)]"
+                    "value": "[format('powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId {0} -DomainJoinPassword \"{1}\" -DomainJoinUserPrincipalName {2} -ActiveDirectorySolution \"{3}\" -Environment {4} -KerberosEncryptionType {5} -StorageAccountFullName {6} -FileShareName \"{7}\" -Netbios {8} -OuPath \"{9}\" -SecurityPrincipalNames \"{10}\" -StorageAccountResourceGroupName {11} -StorageCount {12} -StorageIndex {13} -StorageSolution {14} -StorageSuffix {15} -SubscriptionId {16} -TenantId {17}', parameters('managedIdentityClientId'), parameters('domainJoinUserPassword'), parameters('domainJoinUserName'), parameters('ActiveDirectorySolution'), environment().name, parameters('KerberosEncryption'), parameters('storageAccountName'), parameters('fileShareName'), parameters('netBios'), parameters('ouStgPath'), parameters('securityPrincipalNames'), parameters('storageObjectsRgName'), parameters('storageCount'), parameters('storageIndex'), parameters('storageSolution'), environment().suffixes.storage, subscription().subscriptionId, subscription().tenantId)]"
                   },
                   "Location": {
                     "value": "[parameters('sessionHostLocation')]"
@@ -39361,7 +39359,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.20.4.51522",
-              "templateHash": "8421855814376641161"
+              "templateHash": "16414992328187639528"
             }
           },
           "parameters": {
@@ -39568,12 +39566,10 @@
               }
             },
             "securityPrincipalNames": {
-              "type": "string",
-              "defaultValue": ""
+              "type": "string"
             },
             "storageSolution": {
-              "type": "string",
-              "defaultValue": "AzureStorageAccount"
+              "type": "string"
             },
             "storageCount": {
               "type": "int",
@@ -43458,7 +43454,7 @@
                     "value": "[parameters('_artifactsLocationSasToken')]"
                   },
                   "CommandToExecute": {
-                    "value": "[format('powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId {0} -DomainJoinPassword \"{1}\" -DomainJoinUserPrincipalName {2} -ActiveDirectorySolution \"{3}\" -Environment {4} -KerberosEncryptionType {5} -StorageAccountFullName {6} -FileShareName \"{7}\" -Netbios {8} -OuPath \"{9}\" -securityPrincipalNames \"{10}\" -StorageAccountResourceGroupName {11} -StorageCount {12} -StorageIndex {13} -StorageSolution {14} -StorageSuffix {15} -SubscriptionId {16} -TenantId {17}', parameters('managedIdentityClientId'), parameters('domainJoinUserPassword'), parameters('domainJoinUserName'), parameters('ActiveDirectorySolution'), environment().name, parameters('KerberosEncryption'), parameters('storageAccountName'), parameters('fileShareName'), parameters('netBios'), parameters('storageCustomOuPath'), parameters('securityPrincipalNames'), parameters('storageObjectsRgName'), parameters('storageCount'), parameters('storageIndex'), parameters('storageSolution'), environment().suffixes.storage, subscription().subscriptionId, subscription().tenantId)]"
+                    "value": "[format('powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId {0} -DomainJoinPassword \"{1}\" -DomainJoinUserPrincipalName {2} -ActiveDirectorySolution \"{3}\" -Environment {4} -KerberosEncryptionType {5} -StorageAccountFullName {6} -FileShareName \"{7}\" -Netbios {8} -OuPath \"{9}\" -SecurityPrincipalNames \"{10}\" -StorageAccountResourceGroupName {11} -StorageCount {12} -StorageIndex {13} -StorageSolution {14} -StorageSuffix {15} -SubscriptionId {16} -TenantId {17}', parameters('managedIdentityClientId'), parameters('domainJoinUserPassword'), parameters('domainJoinUserName'), parameters('ActiveDirectorySolution'), environment().name, parameters('KerberosEncryption'), parameters('storageAccountName'), parameters('fileShareName'), parameters('netBios'), parameters('ouStgPath'), parameters('securityPrincipalNames'), parameters('storageObjectsRgName'), parameters('storageCount'), parameters('storageIndex'), parameters('storageSolution'), environment().suffixes.storage, subscription().subscriptionId, subscription().tenantId)]"
                   },
                   "Location": {
                     "value": "[parameters('sessionHostLocation')]"
