@@ -66,12 +66,12 @@ param avdApplicationGroupIdentitiesIds array = []
 @sys.description('Optional, Identity type to grant RBAC role to access AVD application group. (Default: Group)')
 param avdApplicationGroupIdentityType string = 'Group'
 
-param securityPrincipalNames string = 'myavdusers' //testing
+param securityPrincipalNames string //testing new param 
 
 @sys.description('AD domain name.')
 param avdIdentityDomainName string
 
-param netBios string = 'mngenvmcap88523' //testing
+param netBios string //testing new param
 
 @sys.description('AD domain GUID. (Default: "")')
 param identityDomainGuid string = ''
@@ -571,7 +571,7 @@ var varZtKvPrivateEndpointName = 'pe-${varZtKvName}-vault'
 //
 var varFsLogixScriptArguments = (avdIdentityServiceProvider == 'AAD') ? '-volumeshare ${varFslogixSharePath} -storageAccountName ${varFslogixStorageName} -identityDomainName ${avdIdentityDomainName}' : '-volumeshare ${varFslogixSharePath}'
 var varFslogixSharePath = '\\\\${varFslogixStorageName}.file.${environment().suffixes.storage}\\${varFslogixFileShareName}'
-var varBaseScriptUri = 'https://raw.githubusercontent.com/moisesjgomez/avdaccelerator/set-ntfspermissions/workload/'
+var varBaseScriptUri = 'https://raw.githubusercontent.com/Azure/avdaccelerator/ntfs-setup/workload/'
 var varFslogixScriptUri = (avdIdentityServiceProvider == 'AAD') ? '${varBaseScriptUri}scripts/Set-FSLogixRegKeysAAD.ps1' : '${varBaseScriptUri}scripts/Set-FSLogixRegKeys.ps1'
 var varFsLogixScript = (avdIdentityServiceProvider == 'AAD') ? './Set-FSLogixRegKeysAad.ps1' : './Set-FSLogixRegKeys.ps1'
 //var varCompRgDeploCleanScript = './cleanUpRgDeployments.ps1'
