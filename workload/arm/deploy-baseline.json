@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.21.1.54444",
-      "templateHash": "5557013711206236146"
+      "templateHash": "7193359885627322863"
     },
     "name": "AVD Accelerator - Baseline Deployment",
     "description": "AVD Accelerator - Deployment Baseline"
@@ -120,8 +120,7 @@
       }
     },
     "securityPrincipalNames": {
-      "type": "string",
-      "defaultValue": "myavdusers"
+      "type": "string"
     },
     "avdIdentityDomainName": {
       "type": "string",
@@ -130,8 +129,7 @@
       }
     },
     "netBios": {
-      "type": "string",
-      "defaultValue": "mngenvmcap88523"
+      "type": "string"
     },
     "identityDomainGuid": {
       "type": "string",
@@ -1300,7 +1298,7 @@
     "varZtKvPrivateEndpointName": "[format('pe-{0}-vault', variables('varZtKvName'))]",
     "varFsLogixScriptArguments": "[if(equals(parameters('avdIdentityServiceProvider'), 'AAD'), format('-volumeshare {0} -storageAccountName {1} -identityDomainName {2}', variables('varFslogixSharePath'), variables('varFslogixStorageName'), parameters('avdIdentityDomainName')), format('-volumeshare {0}', variables('varFslogixSharePath')))]",
     "varFslogixSharePath": "[format('\\\\{0}.file.{1}\\{2}', variables('varFslogixStorageName'), environment().suffixes.storage, variables('varFslogixFileShareName'))]",
-    "varBaseScriptUri": "https://raw.githubusercontent.com/moisesjgomez/avdaccelerator/set-ntfspermissions/workload/",
+    "varBaseScriptUri": "https://raw.githubusercontent.com/Azure/avdaccelerator/ntfs-setup/workload/",
     "varFslogixScriptUri": "[if(equals(parameters('avdIdentityServiceProvider'), 'AAD'), format('{0}scripts/Set-FSLogixRegKeysAAD.ps1', variables('varBaseScriptUri')), format('{0}scripts/Set-FSLogixRegKeys.ps1', variables('varBaseScriptUri')))]",
     "varFsLogixScript": "[if(equals(parameters('avdIdentityServiceProvider'), 'AAD'), './Set-FSLogixRegKeysAad.ps1', './Set-FSLogixRegKeys.ps1')]",
     "varAvdAgentPackageLocation": "[format('https://wvdportalstorageblob.blob.{0}/galleryartifacts/Configuration_09-08-2022.zip', environment().suffixes.storage)]",
@@ -35080,7 +35078,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.21.1.54444",
-              "templateHash": "9397044205333860843"
+              "templateHash": "17145130864687829338"
             }
           },
           "parameters": {
@@ -35274,7 +35272,7 @@
             },
             "_artifactsLocation": {
               "type": "string",
-              "defaultValue": "https://github.com/moisesjgomez/avdaccelerator/tree/ntfs-permissions/workload/scripts/",
+              "defaultValue": "https://github.com/Azure/avdaccelerator/tree/ntfs-setup/workload/scripts/",
               "metadata": {
                 "description": "Location of script. Default is located in workload/scripts"
               }
@@ -39359,7 +39357,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.21.1.54444",
-              "templateHash": "9397044205333860843"
+              "templateHash": "17145130864687829338"
             }
           },
           "parameters": {
@@ -39553,7 +39551,7 @@
             },
             "_artifactsLocation": {
               "type": "string",
-              "defaultValue": "https://github.com/moisesjgomez/avdaccelerator/tree/ntfs-permissions/workload/scripts/",
+              "defaultValue": "https://github.com/Azure/avdaccelerator/tree/ntfs-setup/workload/scripts/",
               "metadata": {
                 "description": "Location of script. Default is located in workload/scripts"
               }
