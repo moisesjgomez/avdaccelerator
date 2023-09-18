@@ -116,7 +116,7 @@ param storageSolution string
 
 param storageCount int = 1
 
-param storageIndex int = 0
+param storageIndex int = 1
 
 param netBios string = ''
 
@@ -255,7 +255,7 @@ module ntfsPermissions 'ntfsPermissions.bicep' = if (contains(identityServicePro
       _artifactsLocation: _artifactsLocation
       _artifactsLocationSasToken: _artifactsLocationSasToken
       //CommandToExecute: 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId "2e21756f-35e3-42f5-b7a5-60154837dc03" -DomainJoinPassword "Admin1234567890!" -DomainJoinUserPrincipalName "admin01@mngenvmcap885230.onmicrosoft.com" -ActiveDirectorySolution "ActiveDirectoryDomainServices" -Environment "AzureCloud" -FslogixSolution "ProfileContainer" -KerberosEncryptionType "AES256" -StorageAccountFullName "stfslnf59d7br" -Netbios "mngenvmcap88523" -OuPath "OU=AVD,OU=Azure,DC=mngenvmcap885230,DC=onmicrosoft,DC=com" -SecurityPrincipalNames "AVD Users" -StorageAccountPrefix "stfslnf59d7br" -StorageAccountResourceGroupName "rg-avd-nf59-dev-use-storage" -StorageCount 1 -StorageIndex 1 -StorageSolution "AzureStorageAccount" -StorageSuffix "core.windows.net" -SubscriptionId "f6d0875c-f868-4019-94d2-bd7c10b761c8" -TenantId "2a3287e8-8fd5-4965-8a7d-2efacfbde54e"'
-      CommandToExecute: 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId ${managedIdentityClientId} -DomainJoinPassword "${domainJoinUserPassword}" -DomainJoinUserPrincipalName ${domainJoinUserName} -ActiveDirectorySolution ${ActiveDirectorySolution} -Environment ${environment().name}  -KerberosEncryptionType ${KerberosEncryption} -StorageAccountFullName ${storageAccountName} -FileShareName ${fileShareName} -Netbios ${netBios} -OuPath "${ouStgPath}" -SecurityPrincipalNames "${securityPrincipalNames}" -StorageAccountResourceGroupName ${storageObjectsRgName} -StorageCount ${storageCount} -StorageIndex ${storageIndex} -StorageSolution ${storageSolution} -StorageSuffix ${environment().suffixes.storage} -SubscriptionId ${subscription().subscriptionId} -TenantId ${subscription().tenantId}'
+      CommandToExecute: 'powershell -ExecutionPolicy Unrestricted -File Set-NtfsPermissions.ps1 -ClientId "${managedIdentityClientId}" -DomainJoinPassword "${domainJoinUserPassword}" -DomainJoinUserPrincipalName "${domainJoinUserName}" -ActiveDirectorySolution "${ActiveDirectorySolution}" -Environment "${environment().name}"  -KerberosEncryptionType "${KerberosEncryption}" -StorageAccountFullName "${storageAccountName}" -FileShareName "${fileShareName}" -Netbios "${netBios}" -OuPath "${ouStgPath}" -SecurityPrincipalNames "${securityPrincipalNames}" -StorageAccountResourceGroupName "${storageObjectsRgName}" -StorageCount ${storageCount} -StorageIndex ${storageIndex} -StorageSolution "${storageSolution}" -StorageSuffix "${environment().suffixes.storage}" -SubscriptionId "${subscription().subscriptionId}" -TenantId "${subscription().tenantId}"'
       Location: sessionHostLocation
       ManagementVmName: managementVmName
       Timestamp: time

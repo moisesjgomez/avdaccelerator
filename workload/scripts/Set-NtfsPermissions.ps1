@@ -298,7 +298,6 @@ try
 
             # Unmount file share
             Remove-PSDrive -Name 'Z' -PSProvider 'FileSystem' -Force
-            Start-Sleep -Seconds 5
             Write-Log -Message "Unmounting the Azure file share, $FileShare, succeeded" -Type 'INFO'
     }
 }

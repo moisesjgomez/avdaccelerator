@@ -1,7 +1,7 @@
 param _artifactsLocation string
 @secure()
 param _artifactsLocationSasToken string
-@secure()
+//@secure() //TESTING CHANGE BACK
 param CommandToExecute string
 //param DeploymentScriptNamePrefix string
 param Location string
