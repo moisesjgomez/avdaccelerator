@@ -87,6 +87,9 @@ param domainJoinUserName string = 'NoUsername'
 @sys.description('OS disk type for session host. (Default: Premium_LRS)')
 param diskType string = 'Premium_LRS'
 
+@sys.description('Optional. Define custom OS disk size if larger than image size.')
+param customOsDiskSizeGB string = ''
+
 @sys.description('Domain join user password keyvault secret name. (Default: domainJoinUserPassword)')
 param domainJoinPasswordSecretName string = 'domainJoinUserPassword'
 
@@ -228,6 +231,18 @@ var varManagedDisk = empty(diskEncryptionSetResourceId) ? {
   }
   storageAccountType: diskType
 }
+var varOsDiskProperties = {
+  createOption: 'fromImage'
+  deleteOption: 'Delete'
+  managedDisk: varManagedDisk
+}
+
+var varCustomOsDiskProperties = {
+  createOption: 'fromImage'
+  deleteOption: 'Delete'
+  managedDisk: varManagedDisk
+  diskSizeGB: !empty(customOsDiskSizeGB ) ? customOsDiskSizeGB : null
+}
 var varFslogixStorageFqdn = configureFslogix ? '${fslogixStorageAccountName}.file.${environment().suffixes.storage}' : ''
 var varFslogixSharePath = configureFslogix ? '\\\\${fslogixStorageAccountName}.file.${environment().suffixes.storage}\\${fslogixFileShareName}' : ''
 var varBaseScriptUri = 'https://raw.githubusercontent.com/Azure/avdaccelerator/main/workload/'
@@ -297,11 +312,7 @@ module sessionHosts '../../../../carml/1.3.0/Microsoft.Compute/virtualMachines/d
     secureBootEnabled: secureBootEnabled
     vTpmEnabled: vTpmEnabled
     imageReference: useSharedImage ? json('{\'id\': \'${customImageDefinitionId}\'}') : varMarketPlaceGalleryWindows[osImage]
-    osDisk: {
-      createOption: 'fromImage'
-      deleteOption: 'Delete'
-      managedDisk: varManagedDisk
-    }
+    osDisk: !empty(customOsDiskSizeGB ) ? varCustomOsDiskProperties : varOsDiskProperties
     adminUsername: vmLocalUserName
     adminPassword: keyVault.getSecret(vmLocalAdminPasswordSecretName)
     nicConfigurations: [
