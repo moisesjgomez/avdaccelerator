@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.24.24.22086",
-      "templateHash": "4242105607175068069"
+      "templateHash": "2828167018729778925"
     }
   },
   "parameters": {
@@ -179,6 +179,13 @@
       "defaultValue": "Premium_LRS",
       "metadata": {
         "description": "OS disk type for session host. (Default: Premium_LRS)"
+      }
+    },
+    "customOsDiskSizeGB": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Optional. Define custom OS disk size if larger than image size."
       }
     },
     "domainJoinPasswordSecretName": {
@@ -788,6 +795,17 @@
     "varKeyVaultRgName": "[split(parameters('keyVaultResourceId'), '/')[4]]",
     "varKeyVaultName": "[split(parameters('keyVaultResourceId'), '/')[8]]",
     "varManagedDisk": "[if(empty(parameters('diskEncryptionSetResourceId')), createObject('storageAccountType', parameters('diskType')), createObject('diskEncryptionSet', createObject('id', parameters('diskEncryptionSetResourceId')), 'storageAccountType', parameters('diskType')))]",
+    "varOsDiskProperties": {
+      "createOption": "fromImage",
+      "deleteOption": "Delete",
+      "managedDisk": "[variables('varManagedDisk')]"
+    },
+    "varCustomOsDiskProperties": {
+      "createOption": "fromImage",
+      "deleteOption": "Delete",
+      "managedDisk": "[variables('varManagedDisk')]",
+      "diskSizeGB": "[if(not(empty(parameters('customOsDiskSizeGB'))), parameters('customOsDiskSizeGB'), null())]"
+    },
     "varFslogixStorageFqdn": "[if(parameters('configureFslogix'), format('{0}.file.{1}', parameters('fslogixStorageAccountName'), environment().suffixes.storage), '')]",
     "varFslogixSharePath": "[if(parameters('configureFslogix'), format('\\\\{0}.file.{1}\\{2}', parameters('fslogixStorageAccountName'), environment().suffixes.storage, parameters('fslogixFileShareName')), '')]",
     "varBaseScriptUri": "https://raw.githubusercontent.com/Azure/avdaccelerator/main/workload/",
@@ -858,13 +876,7 @@
             "value": "[parameters('vTpmEnabled')]"
           },
           "imageReference": "[if(parameters('useSharedImage'), createObject('value', json(format('{{''id'': ''{0}''}}', parameters('customImageDefinitionId')))), createObject('value', variables('varMarketPlaceGalleryWindows')[parameters('osImage')]))]",
-          "osDisk": {
-            "value": {
-              "createOption": "fromImage",
-              "deleteOption": "Delete",
-              "managedDisk": "[variables('varManagedDisk')]"
-            }
-          },
+          "osDisk": "[if(not(empty(parameters('customOsDiskSizeGB'))), createObject('value', variables('varCustomOsDiskProperties')), createObject('value', variables('varOsDiskProperties')))]",
           "adminUsername": {
             "value": "[parameters('vmLocalUserName')]"
           },
@@ -916,7 +928,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.24.24.22086",
-              "templateHash": "15547223459257060092"
+              "templateHash": "3813721439662824287"
             }
           },
           "parameters": {
@@ -1599,8 +1611,8 @@
                     "name": "[format('osdisk-01-{0}', parameters('name'))]",
                     "createOption": "[if(contains(parameters('osDisk'), 'createOption'), parameters('osDisk').createOption, 'FromImage')]",
                     "deleteOption": "[if(contains(parameters('osDisk'), 'deleteOption'), parameters('osDisk').deleteOption, 'Delete')]",
-                    "diskSizeGB": "[if(contains(parameters('osDisk'), 'diskSizeGB'), parameters('osDisk').diskSizeGB, null())]",
                     "caching": "[if(contains(parameters('osDisk'), 'caching'), parameters('osDisk').caching, 'ReadOnly')]",
+                    "diskSizeGB": "[if(contains(parameters('osDisk'), 'diskSizeGB'), parameters('osDisk').diskSizeGB, null())]",
                     "managedDisk": {
                       "storageAccountType": "[parameters('osDisk').managedDisk.storageAccountType]",
                       "diskEncryptionSet": "[if(contains(parameters('osDisk').managedDisk, 'diskEncryptionSet'), createObject('id', parameters('osDisk').managedDisk.diskEncryptionSet.id), null())]"
