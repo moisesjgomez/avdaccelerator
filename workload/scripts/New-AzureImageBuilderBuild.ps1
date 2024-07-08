@@ -35,8 +35,18 @@ $ErrorActionPreference = 'Stop'
 
 try 
 {
+# Specify the version of Az.Accounts
+    $azAccountsVersion = '2.2.8'
+
+    # Import Az.Accounts with specified version
+    if (-not (Get-Module -ListAvailable -Name 'Az.Accounts' -RequiredVersion $azAccountsVersion)) {
+        Install-Module -Name 'Az.Accounts' -RequiredVersion $azAccountsVersion -Force -AllowClobber
+    }
+    Import-Module -Name 'Az.Accounts' -RequiredVersion $azAccountsVersion -Force
+    Write-Output "$TemplateName | $TemplateResourceGroupName | Imported Az.Accounts version $azAccountsVersion."
+
     # Import Modules
-    Import-Module -Name 'Az.Accounts','Az.Compute','Az.ImageBuilder'
+    Import-Module -Name 'Az.Compute','Az.ImageBuilder'
     Write-Output "$TemplateName | $TemplateResourceGroupName | Imported the required modules."
 
     # Connect to Azure using the Managed Identity
